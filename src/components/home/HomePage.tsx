@@ -88,7 +88,7 @@ export function HomePage() {
               badge="Net estimé"
               value={netValue}
               sub={netSub}
-              accent="#22C55E"
+              accent="#6b8a5a"
               icon={<TrendingUp size={16} />}
             />
           </motion.div>
@@ -98,9 +98,9 @@ export function HomePage() {
               badge="Compteur"
               value={counterValue}
               sub={counterSub}
-              accent="#06B6D4"
+              accent="#d68a3c"
               icon={<Timer size={16} />}
-              valueColor={!counterLoading && balanceMinutes < 0 ? '#F87171' : undefined}
+              valueColor={!counterLoading && balanceMinutes < 0 ? '#c87067' : undefined}
             />
           </motion.div>
         </div>
@@ -142,7 +142,7 @@ function SummaryCard({ badge, value, sub, accent, icon, valueColor }: SummaryCar
         fontFamily: "'DM Mono', monospace",
         fontSize: '1.5rem',
         fontWeight: 700,
-        color: valueColor ?? '#F4F4F5',
+        color: valueColor ?? '#f1e7d2',
         letterSpacing: '-0.02em',
         lineHeight: 1.1,
       }}>

@@ -41,12 +41,12 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
           padding: '0.875rem 1rem 0.75rem',
           borderBottom: '1px solid rgba(255,255,255,0.05)',
         }}>
-          <CalendarRange size={15} style={{ color: '#52525B' }} />
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#A1A1AA' }}>
+          <CalendarRange size={15} style={{ color: '#8e8775' }} />
+          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#c5bba5' }}>
             Calendrier
           </span>
           {isLoading && (
-            <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: '#52525B' }}>
+            <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: '#8e8775' }}>
               Chargement…
             </span>
           )}
@@ -61,7 +61,7 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                 style={{
                   textAlign: 'center', fontSize: '0.62rem', fontWeight: 700,
                   letterSpacing: '0.04em',
-                  color: i >= 5 ? '#52525B' : '#3F3F46',
+                  color: i >= 5 ? '#8e8775' : '#5a5448',
                   padding: '2px 0',
                 }}
               >
@@ -96,12 +96,12 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                     justifyContent: 'center',
                     borderRadius: 7,
                     border: todayCell
-                      ? '1.5px solid rgba(240,160,32,0.55)'
+                      ? '1.5px solid rgba(214,138,60,0.55)'
                       : status !== 'vide'
                         ? `1px solid ${style.color}44`
                         : '1px solid transparent',
                     background: todayCell
-                      ? 'rgba(240,160,32,0.1)'
+                      ? 'rgba(214,138,60,0.1)'
                       : status !== 'vide'
                         ? style.bgCell
                         : 'transparent',
@@ -115,12 +115,12 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                     fontSize: '0.78rem',
                     fontWeight: todayCell ? 700 : 400,
                     color: todayCell
-                      ? '#F0A020'
+                      ? '#d68a3c'
                       : status !== 'vide'
                         ? style.color
                         : isWkd || isHoliday
-                          ? '#52525B'
-                          : '#71717A',
+                          ? '#8e8775'
+                          : '#8e8775',
                   }}>
                     {day}
                   </span>
@@ -139,7 +139,7 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                     <span style={{
                       position: 'absolute', bottom: 3,
                       width: 4, height: 4, borderRadius: '50%',
-                      background: '#F59E0B44',
+                      background: 'rgba(214,138,60,0.25)',
                       border: '1px solid #F59E0B88',
                     }} />
                   )}
@@ -151,7 +151,7 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
           {/* Légende */}
           <div style={{
             marginTop: '0.75rem', paddingTop: '0.75rem',
-            borderTop: '1px solid rgba(255,255,255,0.04)',
+            borderTop: '1px solid rgba(241,231,210,0.04)',
             display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1rem',
           }}>
             {(['matin', 'apres_midi', 'jour_supp', 'recuperation', 'conge_paye', 'conge_sans_solde', 'absence'] as const)
@@ -163,7 +163,7 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                     background: STATUS_STYLES[s].dot,
                     flexShrink: 0,
                   }} />
-                  <span style={{ fontSize: '0.65rem', color: '#52525B' }}>
+                  <span style={{ fontSize: '0.65rem', color: '#8e8775' }}>
                     {STATUS_STYLES[s].label}
                   </span>
                 </div>

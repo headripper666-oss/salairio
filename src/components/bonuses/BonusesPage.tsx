@@ -7,6 +7,15 @@ import { useFixedExtras } from '@/hooks/useFixedExtras'
 import { useOneOffBonuses } from '@/hooks/useOneOffBonuses'
 import type { ExtraValueMode } from '@/types/firestore'
 
+const S = {
+  card:    { background: '#1b2238', border: '1px solid rgba(241,231,210,0.07)', borderRadius: 14 } as React.CSSProperties,
+  input:   { width: '100%', background: 'rgba(241,231,210,0.04)', border: '1px solid rgba(241,231,210,0.10)', borderRadius: 10, padding: '0.55rem 0.75rem', fontSize: '0.9rem', color: '#f1e7d2', outline: 'none', fontFamily: 'inherit' } as React.CSSProperties,
+  label:   { fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#8e8775', display: 'block', marginBottom: 4 } as React.CSSProperties,
+  dialog:  { width: '100%', maxWidth: 360, background: '#1b2238', border: '1px solid rgba(241,231,210,0.10)', borderRadius: 20, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' } as React.CSSProperties,
+  btnCancel: { flex: 1, padding: '0.6rem', borderRadius: 10, border: '1px solid rgba(241,231,210,0.10)', background: 'transparent', color: '#8e8775', fontSize: '0.88rem', cursor: 'pointer' } as React.CSSProperties,
+  btnAdd:  { flex: 1, padding: '0.6rem', borderRadius: 10, border: 'none', background: '#d68a3c', color: '#1d1a17', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer' } as React.CSSProperties,
+}
+
 function monthKeyNow(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -31,61 +40,35 @@ function AddFixedDialog({ onClose, onAdd }: AddFixedDialogProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-5 space-y-4">
-        <h3 className="font-semibold text-zinc-100">Nouvelle prime fixe</h3>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '1rem', paddingBottom: 'calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 1rem)' }}>
+      <div style={S.dialog}>
+        <h3 style={{ fontWeight: 700, color: '#f1e7d2', margin: 0, fontSize: '1rem' }}>Nouvelle prime fixe</h3>
 
-        <div className="space-y-3">
-          <input
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500"
-            placeholder="Libellé (ex: Prime d'ancienneté)"
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-          />
-
-          <select
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
-            value={mode}
-            onChange={e => setMode(e.target.value as ExtraValueMode)}
-          >
-            <option value="fixed_euros">Montant fixe (€)</option>
-            <option value="percent_gross">% du brut de base</option>
-          </select>
-
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500"
-            placeholder={mode === 'fixed_euros' ? 'Montant en €' : 'Pourcentage (ex: 5)'}
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-          />
-
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div>
-            <label className="text-xs text-zinc-500 mb-1 block">Applicable à partir de</label>
-            <input
-              type="month"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
-              value={fromMonth}
-              onChange={e => setFromMonth(e.target.value)}
-            />
+            <label style={S.label}>Libellé</label>
+            <input style={S.input} placeholder="Prime d'ancienneté" value={label} onChange={e => setLabel(e.target.value)} />
+          </div>
+          <div>
+            <label style={S.label}>Type</label>
+            <select style={{ ...S.input, appearance: 'none' } as React.CSSProperties} value={mode} onChange={e => setMode(e.target.value as ExtraValueMode)}>
+              <option value="fixed_euros">Montant fixe (€)</option>
+              <option value="percent_gross">% du brut de base</option>
+            </select>
+          </div>
+          <div>
+            <label style={S.label}>{mode === 'fixed_euros' ? 'Montant (€)' : 'Pourcentage'}</label>
+            <input type="number" min="0" step="0.01" style={S.input} placeholder={mode === 'fixed_euros' ? '150.00' : '5'} value={amount} onChange={e => setAmount(e.target.value)} />
+          </div>
+          <div>
+            <label style={S.label}>Applicable à partir de</label>
+            <input type="month" style={S.input} value={fromMonth} onChange={e => setFromMonth(e.target.value)} />
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2 rounded-xl border border-zinc-700 text-zinc-400 text-sm hover:bg-zinc-800 transition-colors"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={submit}
-            className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-sm transition-colors"
-          >
-            Ajouter
-          </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={onClose} style={S.btnCancel}>Annuler</button>
+          <button onClick={submit} style={S.btnAdd}>Ajouter</button>
         </div>
       </div>
     </div>
@@ -111,59 +94,32 @@ function AddOneOffDialog({ onClose, onAdd }: AddOneOffDialogProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl p-5 space-y-4">
-        <h3 className="font-semibold text-zinc-100">Nouvelle prime ponctuelle</h3>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '1rem', paddingBottom: 'calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 1rem)' }}>
+      <div style={S.dialog}>
+        <h3 style={{ fontWeight: 700, color: '#f1e7d2', margin: 0, fontSize: '1rem' }}>Nouvelle prime ponctuelle</h3>
 
-        <div className="space-y-3">
-          <input
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500"
-            placeholder="Libellé (ex: Prime de fin d'année)"
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-          />
-
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div>
-            <label className="text-xs text-zinc-500 mb-1 block">Mois</label>
-            <input
-              type="month"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
-              value={month}
-              onChange={e => setMonth(e.target.value)}
-            />
+            <label style={S.label}>Libellé</label>
+            <input style={S.input} placeholder="Prime de fin d'année" value={label} onChange={e => setLabel(e.target.value)} />
           </div>
-
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500"
-            placeholder="Montant en €"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-          />
-
-          <input
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500"
-            placeholder="Note (optionnel)"
-            value={note}
-            onChange={e => setNote(e.target.value)}
-          />
+          <div>
+            <label style={S.label}>Mois</label>
+            <input type="month" style={S.input} value={month} onChange={e => setMonth(e.target.value)} />
+          </div>
+          <div>
+            <label style={S.label}>Montant (€)</label>
+            <input type="number" min="0" step="0.01" style={S.input} placeholder="500.00" value={amount} onChange={e => setAmount(e.target.value)} />
+          </div>
+          <div>
+            <label style={S.label}>Note (optionnel)</label>
+            <input style={S.input} placeholder="Détails…" value={note} onChange={e => setNote(e.target.value)} />
+          </div>
         </div>
 
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2 rounded-xl border border-zinc-700 text-zinc-400 text-sm hover:bg-zinc-800 transition-colors"
-          >
-            Annuler
-          </button>
-          <button
-            onClick={submit}
-            className="flex-1 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-semibold text-sm transition-colors"
-          >
-            Ajouter
-          </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={onClose} style={S.btnCancel}>Annuler</button>
+          <button onClick={submit} style={S.btnAdd}>Ajouter</button>
         </div>
       </div>
     </div>
@@ -184,108 +140,97 @@ export function BonusesPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader title="Primes" />
 
-      <div className="flex-1 overflow-y-auto px-4 pb-24 space-y-6 pt-4">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', paddingBottom: 'calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 1rem)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-        {/* ── Primes fixes ────────────────────────────── */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Repeat size={16} className="text-amber-400" />
-              <span className="font-semibold text-zinc-100">Primes fixes</span>
+        {/* ── Primes fixes ──────────────────────────────── */}
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Repeat size={16} color="#d68a3c" />
+              <span style={{ fontWeight: 600, color: '#f1e7d2' }}>Primes fixes</span>
             </div>
             <button
               onClick={() => setShowFixedDialog(true)}
-              className="flex items-center gap-1 text-sm text-amber-400 hover:text-amber-300 transition-colors"
+              style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: '#d68a3c', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 500 }}
             >
-              <Plus size={16} /> Ajouter
+              <Plus size={15} /> Ajouter
             </button>
           </div>
 
           {fixedExtras.length === 0 && (
-            <p className="text-sm text-zinc-500 py-2">Aucune prime fixe configurée.</p>
+            <p style={{ fontSize: '0.82rem', color: '#8e8775', margin: 0, padding: '0.5rem 0' }}>Aucune prime fixe configurée.</p>
           )}
 
           {fixedExtras.map(e => (
-            <div
-              key={e.id}
-              className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-zinc-100 truncate">{e.label}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  {fmtExtra(e)}
-                  {e.appliesFromMonth && ` · depuis ${e.appliesFromMonth}`}
+            <div key={e.id} style={{ ...S.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1rem' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '0.9rem', color: '#f1e7d2', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</p>
+                <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
+                  {fmtExtra(e)}{e.appliesFromMonth && ` · depuis ${e.appliesFromMonth}`}
                 </p>
               </div>
-              <div className="flex items-center gap-2 ml-3">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 12 }}>
                 <button
                   onClick={() => updateExtra(e.id, { isActive: !e.isActive })}
-                  className="text-zinc-400 hover:text-amber-400 transition-colors"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: e.isActive ? '#d68a3c' : '#5a5448', display: 'flex', padding: 2 }}
                   title={e.isActive ? 'Désactiver' : 'Activer'}
                 >
-                  {e.isActive
-                    ? <ToggleRight size={22} className="text-amber-400" />
-                    : <ToggleLeft size={22} />
-                  }
+                  {e.isActive ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
                 </button>
                 <button
                   onClick={() => deleteExtra(e.id)}
-                  className="text-zinc-600 hover:text-red-400 transition-colors"
+                  className="delete-btn"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
           ))}
         </section>
 
-        {/* ── Primes ponctuelles ──────────────────────── */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Gift size={16} className="text-amber-400" />
-              <span className="font-semibold text-zinc-100">Primes ponctuelles</span>
+        {/* ── Primes ponctuelles ────────────────────────── */}
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Gift size={16} color="#d68a3c" />
+              <span style={{ fontWeight: 600, color: '#f1e7d2' }}>Primes ponctuelles</span>
             </div>
             <button
               onClick={() => setShowOneOffDialog(true)}
-              className="flex items-center gap-1 text-sm text-amber-400 hover:text-amber-300 transition-colors"
+              style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: '#d68a3c', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 500 }}
             >
-              <Plus size={16} /> Ajouter
+              <Plus size={15} /> Ajouter
             </button>
           </div>
 
           {bonuses.length === 0 && (
-            <p className="text-sm text-zinc-500 py-2">Aucune prime ponctuelle enregistrée.</p>
+            <p style={{ fontSize: '0.82rem', color: '#8e8775', margin: 0, padding: '0.5rem 0' }}>Aucune prime ponctuelle enregistrée.</p>
           )}
 
           {bonuses.map(b => (
-            <div
-              key={b.id}
-              className="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-zinc-100 truncate">{b.label}</p>
-                <p className="text-xs text-zinc-500 mt-0.5">
-                  {b.amountEuros.toFixed(2)} € ·{' '}
-                  {format(parseISO(`${b.monthKey}-01`), 'MMMM yyyy', { locale: fr })}
+            <div key={b.id} style={{ ...S.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1rem' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '0.9rem', color: '#f1e7d2', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.label}</p>
+                <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
+                  {b.amountEuros.toFixed(2)} € · {format(parseISO(`${b.monthKey}-01`), 'MMMM yyyy', { locale: fr })}
                   {b.note && ` · ${b.note}`}
                 </p>
               </div>
               <button
                 onClick={() => deleteBonus(b.id)}
-                className="text-zinc-600 hover:text-red-400 transition-colors ml-3"
+                className="delete-btn"
+                style={{ marginLeft: 12 }}
               >
-                <Trash2 size={16} />
+                <Trash2 size={14} />
               </button>
             </div>
           ))}
         </section>
       </div>
 
-      {/* Dialogs */}
       {showFixedDialog && (
         <AddFixedDialog
           onClose={() => setShowFixedDialog(false)}

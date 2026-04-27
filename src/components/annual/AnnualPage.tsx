@@ -59,7 +59,7 @@ export function AnnualPage() {
             </button>
             <span style={{
               fontFamily: "'DM Mono', monospace",
-              fontSize: '0.85rem', fontWeight: 700, color: '#F4F4F5',
+              fontSize: '0.85rem', fontWeight: 700, color: '#f1e7d2',
               minWidth: 44, textAlign: 'center',
             }}>
               {year}
@@ -81,18 +81,18 @@ export function AnnualPage() {
             gap: '0.625rem',
             margin: '0.75rem 0 1.25rem',
           }}>
-            <TotalCard label="Net annuel" value={formatEuros(totals.netTotal, { decimals: 0 })} accent="#22C55E" />
-            <TotalCard label="Brut annuel" value={formatEuros(totals.grossTotal, { decimals: 0 })} accent="#F59E0B" />
+            <TotalCard label="Net annuel" value={formatEuros(totals.netTotal, { decimals: 0 })} accent="#6b8a5a" />
+            <TotalCard label="Brut annuel" value={formatEuros(totals.grossTotal, { decimals: 0 })} accent="#d68a3c" />
             {totals.overtimeMin > 0 && (
-              <TotalCard label="Supp. payées" value={formatMinutes(totals.overtimeMin, { compact: true })} accent="#60A5FA" />
+              <TotalCard label="Supp. payées" value={formatMinutes(totals.overtimeMin, { compact: true })} accent="#8aaee0" />
             )}
-            <TotalCard label="Mois sauvegardés" value={`${totals.count} / 12`} accent="#A1A1AA" />
+            <TotalCard label="Mois sauvegardés" value={`${totals.count} / 12`} accent="#8e8775" />
           </div>
         )}
 
         {/* Message vide */}
         {!isLoading && summaries.size === 0 && (
-          <div style={{ textAlign: 'center', color: '#52525B', padding: '2.5rem 0' }}>
+          <div style={{ textAlign: 'center', color: '#8e8775', padding: '2.5rem 0' }}>
             <CalendarRange size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.3 }} />
             <p style={{ fontSize: '0.9rem' }}>Aucune estimation sauvegardée pour {year}</p>
             <p style={{ fontSize: '0.75rem', marginTop: 4 }}>
@@ -103,10 +103,10 @@ export function AnnualPage() {
 
         {/* Table scrollable */}
         {(isLoading || summaries.size > 0) && (
-          <div style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid rgba(241,231,210,0.07)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                <tr style={{ borderBottom: '1px solid rgba(241,231,210,0.07)' }}>
                   {['Mois', 'Net', 'Brut', 'Supp.', 'Compteur', ''].map((h, i) => (
                     <th
                       key={i}
@@ -115,8 +115,8 @@ export function AnnualPage() {
                         textAlign: i === 0 ? 'left' : 'right',
                         fontSize: '0.6rem', fontWeight: 700,
                         letterSpacing: '0.08em', textTransform: 'uppercase',
-                        color: '#52525B', whiteSpace: 'nowrap',
-                        background: '#18181B',
+                        color: '#8e8775', whiteSpace: 'nowrap',
+                        background: '#1b2238',
                       }}
                     >
                       {h}
@@ -144,7 +144,7 @@ export function AnnualPage() {
         )}
 
         {/* Légende */}
-        <p style={{ fontSize: '0.65rem', color: '#3F3F46', marginTop: '0.875rem', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.65rem', color: '#5a5448', marginTop: '0.875rem', textAlign: 'center' }}>
           Seuls les mois sauvegardés dans Synthèse apparaissent ici.
         </p>
       </div>
@@ -168,9 +168,9 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
   const cellStyle: React.CSSProperties = {
     padding: '0.7rem 0.875rem',
     fontSize: '0.8rem',
-    color: hasSummary ? '#E4E4E7' : '#3F3F46',
-    borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.04)',
-    background: isCurrent ? 'rgba(245,158,11,0.04)' : 'transparent',
+    color: hasSummary ? '#f1e7d2' : '#5a5448',
+    borderBottom: isLast ? 'none' : '1px solid rgba(241,231,210,0.04)',
+    background: isCurrent ? 'rgba(214,138,60,0.05)' : 'transparent',
     whiteSpace: 'nowrap',
   }
 
@@ -187,14 +187,14 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
           {isCurrent && (
             <span style={{
               fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
-              color: '#F59E0B', background: 'rgba(245,158,11,0.12)',
-              border: '1px solid rgba(245,158,11,0.25)', borderRadius: 3, padding: '1px 5px',
+              color: '#d68a3c', background: 'rgba(214,138,60,0.12)',
+              border: '1px solid rgba(214,138,60,0.25)', borderRadius: 3, padding: '1px 5px',
             }}>
               En cours
             </span>
           )}
         </div>
-        <div style={{ fontSize: '0.65rem', color: '#52525B', marginTop: 1 }}>{full}</div>
+        <div style={{ fontSize: '0.65rem', color: '#8e8775', marginTop: 1 }}>{full}</div>
       </td>
 
       {/* Net */}
@@ -203,12 +203,12 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
       </td>
 
       {/* Brut */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary ? '#A1A1AA' : '#3F3F46', fontSize: '0.75rem' }}>
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary ? '#A1A1AA' : '#5a5448', fontSize: '0.75rem' }}>
         {hasSummary ? formatEuros(summary.grossTotal, { decimals: 0 }) : '—'}
       </td>
 
       {/* Supp. payées */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary && summary.overtimePaidMinutes > 0 ? '#60A5FA' : '#3F3F46', fontSize: '0.75rem' }}>
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary && summary.overtimePaidMinutes > 0 ? '#8aaee0' : '#5a5448', fontSize: '0.75rem' }}>
         {hasSummary
           ? summary.overtimePaidMinutes > 0
             ? formatMinutes(summary.overtimePaidMinutes, { compact: true })
@@ -218,7 +218,7 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
       </td>
 
       {/* Compteur crédit */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary && summary.counterCreditMinutes > 0 ? '#34D399' : '#3F3F46', fontSize: '0.75rem' }}>
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary && summary.counterCreditMinutes > 0 ? '#6b8a5a' : '#5a5448', fontSize: '0.75rem' }}>
         {hasSummary
           ? summary.counterCreditMinutes > 0
             ? `+${formatMinutes(summary.counterCreditMinutes, { compact: true })}`
@@ -230,7 +230,7 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
       {/* Badge sauvegardé */}
       <td style={{ ...cellStyle, textAlign: 'right', paddingRight: '0.875rem' }}>
         {hasSummary && (
-          <CheckCircle2 size={14} color="#34D399" style={{ opacity: 0.7 }} />
+          <CheckCircle2 size={14} color="#6b8a5a" style={{ opacity: 0.7 }} />
         )}
       </td>
     </motion.tr>
@@ -240,7 +240,7 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
 // ─── Ligne squelette ──────────────────────────────────────────────────────────
 function SkeletonRow() {
   return (
-    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+    <tr style={{ borderBottom: '1px solid rgba(241,231,210,0.04)' }}>
       {[80, 64, 56, 40, 40, 16].map((w, i) => (
         <td key={i} style={{ padding: '0.7rem 0.875rem', textAlign: i === 0 ? 'left' : 'right' }}>
           <div className="skeleton" style={{ width: w, height: 12, display: 'inline-block' }} />
@@ -256,13 +256,13 @@ function TotalCard({ label, value, accent }: { label: string; value: string; acc
     <div style={{
       padding: '0.875rem',
       borderRadius: 12,
-      background: '#18181B',
-      border: '1px solid rgba(255,255,255,0.07)',
+      background: '#1b2238',
+      border: '1px solid rgba(241,231,210,0.07)',
     }}>
       <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: accent, marginBottom: 4 }}>
         {label}
       </div>
-      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: '1.15rem', fontWeight: 700, color: '#F4F4F5' }}>
+      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: '1.15rem', fontWeight: 700, color: '#f1e7d2' }}>
         {value}
       </div>
     </div>
