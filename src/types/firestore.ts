@@ -1,0 +1,172 @@
+import type { Timestamp } from 'firebase/firestore'
+
+// ─── Statuts d'un jour calendrier ─────────────────────────────────────────────
+export type DayStatus =
+  | 'vide'
+  | 'matin'
+  | 'apres_midi'
+  | 'jour_supp'
+  | 'conge_paye'
+  | 'conge_sans_solde'
+  | 'recuperation'
+  | 'absence'
+
+// ─── Types de mouvements du compteur ──────────────────────────────────────────
+export type MovementType =
+  | 'acquise_supp'
+  | 'acquise_jour_supp'
+  | 'recuperee'
+  | 'payee'
+  | 'ajustement_manuel'
+
+// ─── Clés de majorations ──────────────────────────────────────────────────────
+export type MajorationKey =
+  | 'heure_supp_25'
+  | 'heure_supp_50'
+  | 'dimanche'
+  | 'ferie'
+  | 'premier_mai'
+  | 'jour_supp'
+
+export type MajorationMode = 'cumul' | 'priorite'
+
+export type ExtraValueMode = 'fixed_euros' | 'percent_gross'
+
+export type HolidayOverrideAction = 'add' | 'remove'
+
+// ─── Définition d'un poste (matin / après-midi) ───────────────────────────────
+export interface ShiftDefinition {
+  key: string
+  label: string
+  startTime: string        // "06:00"
+  endTime: string          // "14:00"
+  breakMinutes: number     // durée de pause (minutes)
+  durationMinutes: number  // durée effective = (fin - début) - pause
+}
+
+// ─── Règle de majoration ──────────────────────────────────────────────────────
+export interface MajorationRule {
+  key: MajorationKey
+  label: string
+  ratePercent: number
+  enabled: boolean
+}
+
+// ─── users/{uid}/settings/main ────────────────────────────────────────────────
+export interface UserSettings {
+  hourlyRateGross: number          // taux horaire brut direct (€/h)
+  grossMonthlySalary: number       // salaire brut mensuel fixe (pour affichage)
+  monthlyBaseHours: number         // 151.67
+  cssRatePercent: number           // taux cotisations salariales (~22)
+  mutuelleEmployee: number         // part salariale mutuelle (€/mois)
+  shifts: ShiftDefinition[]        // [matin, apres_midi, ...]
+  majorationRules: MajorationRule[]
+  majorationMode: MajorationMode
+  counterInitialMinutes: number
+  defaultView: 'home' | 'summary' | 'counter'
+  updatedAt: Timestamp
+}
+
+// ─── users/{uid}/calendarDays/{yyyy-mm-dd} ────────────────────────────────────
+export interface CalendarDay {
+  date: string              // "2026-04-15"
+  status: DayStatus
+  overtimeMinutes: number   // 0 si pas de supp
+  isFerie: boolean
+  note: string
+  shiftKey?: string
+  updatedAt: Timestamp
+}
+
+// ─── users/{uid}/counterMovements/{movementId} ────────────────────────────────
+export interface CounterMovement {
+  id: string
+  date: string              // "2026-04-15"
+  monthKey: string          // "2026-04"
+  type: MovementType
+  quantityMinutes: number   // positif = crédit, négatif = débit
+  valuationEuros: number
+  sourceDocId?: string
+  note: string
+  createdAt: Timestamp
+}
+
+// ─── users/{uid}/monthlySummaries/{yyyy-mm} ───────────────────────────────────
+export interface MonthlySummary {
+  monthKey: string
+  grossBase: number
+  fixedExtrasTotal: number
+  oneOffBonusesTotal: number
+  overtimePaidMinutes: number
+  overtimePaidEuros: number
+  grossTotal: number
+  cssEmployee: number
+  mutuelleEmployee: number
+  netImposable: number
+  pasRate: number
+  pasAmount: number
+  netAfterTax: number
+  counterCreditMinutes: number
+  counterDebitMinutes: number
+  counterBalanceEndOfMonth: number
+  isEstimate: boolean
+  computedAt: Timestamp
+  updatedAt: Timestamp
+}
+
+// ─── users/{uid}/yearlySummaries/{yyyy} ───────────────────────────────────────
+export interface YearlySummary {
+  year: number
+  months: Record<string, {
+    grossTotal: number
+    netAfterTax: number
+    counterBalance: number
+    counterCreditMinutes: number
+    counterDebitMinutes: number
+    oneOffBonusesTotal: number
+    overtimePaidMinutes: number
+  }>
+  annualGross: number
+  annualNetAfterTax: number
+  updatedAt: Timestamp
+}
+
+// ─── users/{uid}/fixedExtras/{id} ─────────────────────────────────────────────
+export interface FixedExtra {
+  id: string
+  label: string
+  valueMode: ExtraValueMode
+  amount: number
+  isActive: boolean
+  appliesFromMonth?: string  // "2026-01"
+  order: number
+  createdAt: Timestamp
+}
+
+// ─── users/{uid}/oneOffBonuses/{id} ───────────────────────────────────────────
+export interface OneOffBonus {
+  id: string
+  monthKey: string           // "2026-04"
+  label: string
+  amountEuros: number
+  note: string
+  createdAt: Timestamp
+}
+
+// ─── users/{uid}/taxRates/{id} ────────────────────────────────────────────────
+export interface TaxRate {
+  id: string
+  ratePercent: number        // 9.0 (pas 0.09)
+  effectiveFrom: string      // "2026-01"
+  note: string
+  createdAt: Timestamp
+}
+
+// ─── users/{uid}/holidayOverrides/{id} ────────────────────────────────────────
+export interface HolidayOverride {
+  id: string
+  date: string               // "2026-05-08"
+  action: HolidayOverrideAction
+  label: string
+  year: number
+}
