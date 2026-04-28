@@ -1,8 +1,9 @@
 import { useState, useCallback, useRef } from 'react'
 import {
-  DollarSign, Clock, Zap, TrendingUp, CalendarDays,
+  DollarSign, Clock, Zap, TrendingUp, CalendarDays, Bell,
   ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2, Check,
 } from 'lucide-react'
+import { requestNotificationPermission, scheduleNotification, isNotificationGranted, getScheduledIds } from '@/hooks/useNotifications'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useSettings } from '@/hooks/useSettings'
@@ -119,9 +120,10 @@ function PaySection() {
   const { settings, updateSettings, isSaving } = useSettings()
   const { visible, show } = useSaveIndicator()
 
-  const [hourly, setHourly] = useState(() => String(settings?.hourlyRateGross ?? ''))
-  const [css,    setCss]    = useState(() => String(settings?.cssRatePercent  ?? 22))
-  const [mut,    setMut]    = useState(() => String(settings?.mutuelleEmployee ?? ''))
+  const [hourly,    setHourly]    = useState(() => String(settings?.hourlyRateGross ?? ''))
+  const [css,       setCss]       = useState(() => String(settings?.cssRatePercent  ?? 22))
+  const [mut,       setMut]       = useState(() => String(settings?.mutuelleEmployee ?? ''))
+  const [mealPrice, setMealPrice] = useState(() => String(settings?.mealPriceEuros ?? ''))
 
   // Brut mensuel calculé automatiquement (taux × 151,67h — contrat 35h FR)
   const computedGross = parseFloat(hourly) > 0
@@ -202,6 +204,17 @@ function PaySection() {
           step="0.01"
           min="0"
           placeholder="42"
+        />
+        <Field
+          label="Prix d'un repas"
+          hint="Retenue sur salaire par repas pris au travail"
+          value={mealPrice}
+          onChange={setMealPrice}
+          onBlur={() => saveField('mealPriceEuros', mealPrice)}
+          suffix="€"
+          step="0.01"
+          min="0"
+          placeholder="3.50"
         />
       </div>
 
@@ -325,6 +338,23 @@ function MajorationsSection() {
     updateSettings({ majorationRules: next }, { onSuccess: show })
   }
 
+  const [editingKey, setEditingKey] = useState<string | null>(null)
+  const [editingLabel, setEditingLabel] = useState('')
+
+  const startEditLabel = (rule: MajorationRule) => {
+    setEditingKey(rule.key)
+    setEditingLabel(rule.label)
+  }
+
+  const commitLabel = (key: string) => {
+    const trimmed = editingLabel.trim()
+    if (!trimmed) { setEditingKey(null); return }
+    const next = rules.map(r => r.key === key ? { ...r, label: trimmed } : r)
+    setRules(next)
+    updateSettings({ majorationRules: next }, { onSuccess: show })
+    setEditingKey(null)
+  }
+
   const changeMode = (m: 'cumul' | 'priorite') => {
     setMode(m)
     updateSettings({ majorationMode: m }, { onSuccess: show })
@@ -371,9 +401,29 @@ function MajorationsSection() {
               onClick={() => toggleRule(rule.key)}
               aria-label={`${rule.enabled ? 'Désactiver' : 'Activer'} ${rule.label}`}
             />
-            <span className={`settings-row-label${!rule.enabled ? ' settings-row-label--muted' : ''}`}>
-              {rule.label}
-            </span>
+            {editingKey === rule.key ? (
+              <input
+                autoFocus
+                type="text"
+                value={editingLabel}
+                onChange={e => setEditingLabel(e.target.value)}
+                onBlur={() => commitLabel(rule.key)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitLabel(rule.key)
+                  if (e.key === 'Escape') setEditingKey(null)
+                }}
+                className="label-edit-input"
+              />
+            ) : (
+              <span
+                className={`settings-row-label${!rule.enabled ? ' settings-row-label--muted' : ''}`}
+                onClick={() => startEditLabel(rule)}
+                title="Cliquer pour renommer"
+                style={{ cursor: 'text' }}
+              >
+                {rule.label}
+              </span>
+            )}
             <div className="rate-input-wrap">
               <input
                 type="number"
@@ -570,7 +620,7 @@ function HolidaySection() {
         >
           <ChevronLeft size={14} />
         </button>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.9rem', fontWeight: 700, color: '#f1e7d2', minWidth: 40, textAlign: 'center' }}>
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.9rem', fontWeight: 700, color: 'var(--ink)', minWidth: 40, textAlign: 'center' }}>
           {year}
         </span>
         <button
@@ -694,6 +744,250 @@ function HolidaySection() {
   )
 }
 
+const APPT_REMINDER_PRESETS = [
+  { label: '15 min avant', value: 15 },
+  { label: '30 min avant', value: 30 },
+  { label: '1 heure avant', value: 60 },
+  { label: '2 heures avant', value: 120 },
+  { label: '1 jour avant', value: 1440 },
+  { label: '2 jours avant', value: 2880 },
+]
+
+function formatReminderLabel(min: number): string {
+  if (min >= 1440) return `${min / 1440} jour${min / 1440 > 1 ? 's' : ''} avant`
+  if (min >= 60)   return `${min / 60} heure${min / 60 > 1 ? 's' : ''} avant`
+  return `${min} min avant`
+}
+
+// ═══════════════════════════════════════════════════════════
+// SECTION 6 — Rappels (pilule + RDV)
+// ═══════════════════════════════════════════════════════════
+function RemindersSection() {
+  const { settings, updateSettings } = useSettings()
+  const { visible, show } = useSaveIndicator()
+  const [permState, setPermState] = useState<NotificationPermission>(
+    'Notification' in window ? Notification.permission : 'denied',
+  )
+
+  const shifts = settings?.shifts ?? []
+  const times = settings?.pillReminderTimes ?? { offDay: '09:00' }
+  const enabled = settings?.pillReminderEnabled ?? false
+  const apptRules = settings?.apptReminderRules ?? []
+
+  const handleToggle = useCallback(async () => {
+    if (!enabled) {
+      const granted = await requestNotificationPermission()
+      setPermState('Notification' in window ? Notification.permission : 'denied')
+      if (!granted) return
+    }
+    updateSettings({ pillReminderEnabled: !enabled }, { onSuccess: show })
+  }, [enabled, updateSettings, show])
+
+  const saveTime = useCallback((key: string, val: string) => {
+    const next = { ...times, [key]: val }
+    updateSettings({ pillReminderTimes: next as any }, { onSuccess: show })
+  }, [times, updateSettings, show])
+
+  const addApptRule = useCallback((minutesBefore: number) => {
+    if (apptRules.some(r => r.minutesBefore === minutesBefore)) return
+    const next = [...apptRules, { minutesBefore }].sort((a, b) => b.minutesBefore - a.minutesBefore)
+    updateSettings({ apptReminderRules: next }, { onSuccess: show })
+  }, [apptRules, updateSettings, show])
+
+  const removeApptRule = useCallback((minutesBefore: number) => {
+    const next = apptRules.filter(r => r.minutesBefore !== minutesBefore)
+    updateSettings({ apptReminderRules: next }, { onSuccess: show })
+  }, [apptRules, updateSettings, show])
+
+  const availablePresets = APPT_REMINDER_PRESETS.filter(
+    p => !apptRules.some(r => r.minutesBefore === p.value)
+  )
+
+  return (
+    <AccordionSection icon={<Bell size={16} />} title="Rappels" saved={visible}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+        {/* ── Rappels pilule ── */}
+        <div>
+          <p className="settings-section-title" style={{ padding: 0, marginBottom: 8 }}>Pilule contraceptive</p>
+          <div className="settings-grid">
+            <div className="settings-field settings-field--full">
+              <span className="settings-hint">Notification quotidienne à l'heure selon ton poste</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                <button
+                  type="button"
+                  onClick={handleToggle}
+                  style={{
+                    position: 'relative',
+                    width: 44, height: 24, borderRadius: 12,
+                    background: enabled ? '#6b8a5a' : 'var(--rule)',
+                    border: 'none', cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    top: 3, left: enabled ? 23 : 3,
+                    width: 18, height: 18, borderRadius: '50%',
+                    background: '#fff',
+                    transition: 'left 0.2s',
+                  }} />
+                </button>
+                <span style={{ fontSize: '0.78rem', color: 'var(--ink-3)' }}>
+                  {enabled ? 'Activé' : 'Désactivé'}
+                </span>
+              </div>
+              {permState === 'denied' && (
+                <span style={{ fontSize: '0.72rem', color: '#c87067', marginTop: 4, display: 'block' }}>
+                  Les notifications sont bloquées dans le navigateur. Autorise-les dans les paramètres du site.
+                </span>
+              )}
+            </div>
+
+            {enabled && (
+              <>
+                {shifts.map(shift => (
+                  <div key={shift.key} className="settings-field">
+                    <label className="settings-label">Poste {shift.label}</label>
+                    <div className="settings-input-wrap">
+                      <input
+                        type="time"
+                        value={times[shift.key] ?? '20:00'}
+                        onChange={e => saveTime(shift.key, e.target.value)}
+                        className="settings-input"
+                      />
+                    </div>
+                  </div>
+                ))}
+                <div className="settings-field">
+                  <label className="settings-label">Jour non travaillé</label>
+                  <div className="settings-input-wrap">
+                    <input
+                      type="time"
+                      value={times.offDay ?? '09:00'}
+                      onChange={e => saveTime('offDay', e.target.value)}
+                      className="settings-input"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ── Rappels RDV ── */}
+        <div style={{ borderTop: '1px solid var(--rule)', paddingTop: '1rem' }}>
+          <p className="settings-section-title" style={{ padding: 0, marginBottom: 4 }}>Rendez-vous</p>
+          <span className="settings-hint" style={{ display: 'block', marginBottom: 10 }}>
+            Ces rappels s'appliquent à tous tes RDV. Ajoute autant de créneaux que tu veux.
+          </span>
+
+          {/* Règles actives */}
+          {apptRules.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+              {apptRules.map(rule => (
+                <div key={rule.minutesBefore} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '0.4rem 0.6rem',
+                  background: 'var(--paper-3)',
+                  border: '1px solid var(--rule)',
+                  borderRadius: 8,
+                }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--ink)' }}>
+                    🔔 {formatReminderLabel(rule.minutesBefore)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeApptRule(rule.minutesBefore)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--ink-3)', padding: 2, borderRadius: 4,
+                      display: 'flex', alignItems: 'center',
+                    }}
+                    aria-label="Supprimer ce rappel"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Ajouter une règle */}
+          {availablePresets.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {availablePresets.map(preset => (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => addApptRule(preset.value)}
+                  style={{
+                    padding: '0.3rem 0.6rem',
+                    background: 'transparent',
+                    border: '1px dashed var(--ink-4)',
+                    borderRadius: 6,
+                    color: 'var(--ink-3)',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  + {preset.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {apptRules.length === 0 && availablePresets.length === APPT_REMINDER_PRESETS.length && (
+            <span style={{ fontSize: '0.75rem', color: 'var(--ink-4)' }}>
+              Aucun rappel configuré — clique sur un créneau pour l'ajouter.
+            </span>
+          )}
+
+          {/* Bouton de test */}
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--rule)' }}>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!isNotificationGranted()) {
+                  alert('Les notifications ne sont pas autorisées.\nActive-les d\'abord via le toggle Pilule ci-dessus.')
+                  return
+                }
+                const at = new Date(Date.now() + 5000)
+                scheduleNotification('test-notif', '🔔 Test Salairio', 'Les notifications fonctionnent !', at)
+                const ids = getScheduledIds()
+                const swOk = 'serviceWorker' in navigator
+                  ? await navigator.serviceWorker.ready.then(() => true).catch(() => false)
+                  : false
+                alert(
+                  `✅ Notification programmée dans 5 secondes.\n\n` +
+                  `Service Worker : ${swOk ? '✅ actif (mobile OK)' : '❌ inactif (desktop seulement)'}\n` +
+                  `Permission : ${Notification.permission}\n\n` +
+                  `Rappels planifiés (${ids.length}) :\n${ids.join('\n') || '(aucun pour l\'instant)'}`,
+                )
+              }}
+              style={{
+                padding: '0.35rem 0.75rem',
+                background: 'transparent',
+                border: '1px solid var(--ink-4)',
+                borderRadius: 6,
+                color: 'var(--ink-3)',
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+              }}
+            >
+              Tester les notifications (dans 5 s)
+            </button>
+            <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--ink-4)', marginTop: 4 }}>
+              L'onglet doit rester ouvert. Sur mobile, installe l'app en PWA pour de meilleures notifications.
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </AccordionSection>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════
 // PAGE PRINCIPALE
 // ═══════════════════════════════════════════════════════════
@@ -749,7 +1043,7 @@ export function SettingsPage() {
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
-            V1
+            V1.1A
           </span>
         }
       />
@@ -766,6 +1060,7 @@ export function SettingsPage() {
         <MajorationsSection />
         <TaxRateSection />
         <HolidaySection />
+        <RemindersSection />
       </motion.div>
 
       {/* Note de bas de page */}
