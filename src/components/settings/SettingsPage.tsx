@@ -114,6 +114,34 @@ function Field({ label, hint, value, onChange, onBlur, suffix, type = 'number', 
 }
 
 // ═══════════════════════════════════════════════════════════
+// SECTION 0 — Profil
+// ═══════════════════════════════════════════════════════════
+function ProfileSection() {
+  const { settings, updateSettings } = useSettings()
+  const { visible, show } = useSaveIndicator()
+  const [firstName, setFirstName] = useState(() => settings?.firstName ?? '')
+
+  return (
+    <AccordionSection icon={<CalendarDays size={16} />} title="Profil" defaultOpen saved={visible}>
+      <div className="settings-grid">
+        <Field
+          label="Prénom"
+          hint="Affiché sur la page d'accueil"
+          value={firstName}
+          onChange={setFirstName}
+          onBlur={() => {
+            updateSettings({ firstName: firstName.trim() }, { onSuccess: show })
+          }}
+          type="text"
+          placeholder="Marine"
+          full
+        />
+      </div>
+    </AccordionSection>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
 // SECTION 1 — Paramètres de paie
 // ═══════════════════════════════════════════════════════════
 function PaySection() {
@@ -1043,7 +1071,7 @@ export function SettingsPage() {
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
-            V1.1A
+            V1.1C
           </span>
         }
       />
@@ -1055,6 +1083,7 @@ export function SettingsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
+        <ProfileSection />
         <PaySection />
         <ShiftsSection />
         <MajorationsSection />
