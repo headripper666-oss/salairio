@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => ({
     react(),
     tailwindcss(),
     VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'public',
+      filename: 'sw-notifications.js',
       registerType: 'autoUpdate',
       manifest: {
         name: 'Salairio',

@@ -1,4 +1,7 @@
-// Service Worker — reçoit les push du serveur Render et affiche la notification.
+import { precacheAndRoute } from 'workbox-precaching'
+
+// Précache Vite PWA (injecté automatiquement au build)
+precacheAndRoute(self.__WB_MANIFEST)
 
 self.addEventListener('push', event => {
   if (!event.data) return
