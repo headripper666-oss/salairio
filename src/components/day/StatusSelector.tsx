@@ -33,9 +33,9 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
               borderRadius: 10,
               border: isSelected
                 ? `1.5px solid ${style.color}`
-                : '1.5px solid rgba(255,255,255,0.06)',
-              background: isSelected ? style.bgCell : 'rgba(255,255,255,0.02)',
-              color: isSelected ? style.color : '#71717A',
+                : '1.5px solid rgba(241,231,210,0.08)',
+              background: isSelected ? style.bgCell : 'rgba(241,231,210,0.03)',
+              color: isSelected ? style.color : '#8e8775',
               fontSize: '0.8rem',
               fontWeight: isSelected ? 700 : 400,
               cursor: 'pointer',
@@ -50,7 +50,7 @@ export function StatusSelector({ value, onChange }: StatusSelectorProps) {
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: isSelected ? style.dot : 'rgba(255,255,255,0.15)',
+              background: isSelected ? style.dot : 'rgba(241,231,210,0.12)',
               flexShrink: 0,
             }} />
             {style.label}

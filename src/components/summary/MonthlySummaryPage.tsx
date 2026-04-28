@@ -85,7 +85,7 @@ function CounterTile({
       }}>
         {value}
       </div>
-      <div style={{ fontSize: 11, color: '#52525B', marginTop: 4 }}>{sub}</div>
+      <div style={{ fontSize: 11, color: '#8e8775', marginTop: 4 }}>{sub}</div>
     </div>
   )
 }

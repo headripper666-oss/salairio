@@ -76,14 +76,14 @@ export function LoginPage() {
                 fontWeight: 800,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
-                color: '#F4F4F5',
+                color: '#f1e7d2',
                 margin: 0,
                 lineHeight: 1.1,
               }}
             >
               Salairio
             </h1>
-            <p style={{ fontSize: '0.78rem', color: '#52525B', marginTop: '0.3rem' }}>
+            <p style={{ fontSize: '0.78rem', color: '#8e8775', marginTop: '0.3rem' }}>
               Votre tableau de bord personnel
             </p>
           </motion.div>
@@ -164,7 +164,7 @@ export function LoginPage() {
           textAlign: 'center',
           fontSize: '0.68rem',
           letterSpacing: '0.1em',
-          color: '#3F3F46',
+          color: '#5a5448',
           textTransform: 'uppercase',
         }}
       >

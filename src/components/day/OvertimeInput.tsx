@@ -33,7 +33,7 @@ export function OvertimeInput({ value, onChange, valuation }: OvertimeInputProps
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
       <label style={{
         fontSize: '0.72rem', fontWeight: 700,
-        letterSpacing: '0.06em', textTransform: 'uppercase', color: '#71717A',
+        letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8e8775',
       }}>
         Heures supplémentaires
       </label>
@@ -47,11 +47,11 @@ export function OvertimeInput({ value, onChange, valuation }: OvertimeInputProps
           onBlur={handleBlur}
           style={{
             flex: 1,
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'rgba(241,231,210,0.04)',
+            border: '1px solid rgba(241,231,210,0.10)',
             borderRadius: 8,
             padding: '0.5rem 0.75rem',
-            color: '#F4F4F5',
+            color: '#f1e7d2',
             fontSize: '0.9rem',
             fontFamily: "'DM Mono', monospace",
             outline: 'none',
@@ -59,7 +59,7 @@ export function OvertimeInput({ value, onChange, valuation }: OvertimeInputProps
         />
         <div style={{
           fontSize: '0.78rem',
-          color: value > 0 ? '#F59E0B' : '#3F3F46',
+          color: value > 0 ? '#d68a3c' : '#5a5448',
           fontFamily: "'DM Mono', monospace",
           fontWeight: 600,
           minWidth: 72,

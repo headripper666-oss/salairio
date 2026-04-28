@@ -10,7 +10,7 @@ export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
       <div>
         <h1 className="page-title">{title}</h1>
         {subtitle && (
-          <p style={{ fontSize: '0.78rem', color: '#52525B', margin: '2px 0 0' }}>{subtitle}</p>
+          <p style={{ fontSize: '0.78rem', color: '#8e8775', margin: '2px 0 0' }}>{subtitle}</p>
         )}
       </div>
       {action && <div>{action}</div>}

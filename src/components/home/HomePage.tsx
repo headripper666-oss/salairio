@@ -148,7 +148,7 @@ function SummaryCard({ badge, value, sub, accent, icon, valueColor }: SummaryCar
       }}>
         {value}
       </div>
-      <div style={{ fontSize: '0.68rem', color: '#52525B', marginTop: '0.3rem' }}>{sub}</div>
+      <div style={{ fontSize: '0.68rem', color: '#8e8775', marginTop: '0.3rem' }}>{sub}</div>
     </div>
   )
 }

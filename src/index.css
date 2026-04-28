@@ -44,7 +44,7 @@
 
 /* ─── Variables CSS non-Tailwind ──────────────────────────── */
 :root {
-  --deploy: "v2";
+  --deploy: "v3";
   --border-subtle:  rgba(241, 231, 210, 0.06);
   --border-default: rgba(241, 231, 210, 0.10);
   --border-strong:  rgba(241, 231, 210, 0.16);

@@ -169,9 +169,9 @@ function PaySection() {
           <div className="settings-input-wrap">
             <div className="settings-input settings-input--has-suffix" style={{
               display: 'flex', alignItems: 'center',
-              background: 'rgba(240,160,32,0.04)',
-              border: '1px solid rgba(240,160,32,0.15)',
-              color: computedGross ? '#F0A020' : '#3F3F46',
+              background: 'rgba(214,138,60,0.04)',
+              border: '1px solid rgba(214,138,60,0.15)',
+              color: computedGross ? '#d68a3c' : '#5a5448',
               fontFamily: "'DM Mono', monospace",
               userSelect: 'none',
             }}>
@@ -206,7 +206,7 @@ function PaySection() {
       </div>
 
       {isSaving && (
-        <p style={{ fontSize: '0.72rem', color: '#52525B', marginTop: 4 }}>Enregistrement…</p>
+        <p style={{ fontSize: '0.72rem', color: '#8e8775', marginTop: 4 }}>Enregistrement…</p>
       )}
     </AccordionSection>
   )
@@ -289,7 +289,7 @@ function ShiftsSection() {
                 />
               </div>
             </div>
-            <p style={{ fontSize: '0.72rem', color: '#52525B', margin: 0 }}>
+            <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
               = {Math.floor(shift.durationMinutes / 60)}h{shift.durationMinutes % 60 > 0 ? ` ${shift.durationMinutes % 60}min` : ''} de travail effectif
             </p>
           </div>
@@ -353,7 +353,7 @@ function MajorationsSection() {
           Cumul (addition)
         </button>
       </div>
-      <p style={{ fontSize: '0.72rem', color: '#52525B', margin: 0 }}>
+      <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
         {mode === 'priorite'
           ? "Seule la majoration la plus haute s'applique quand plusieurs se cumulent."
           : "Toutes les majorations applicables s'additionnent."}
@@ -423,12 +423,12 @@ function TaxRateSection() {
       icon={<TrendingUp size={16} />}
       title="Taux d'imposition (PAS)"
     >
-      <p style={{ fontSize: '0.78rem', color: '#71717A', margin: 0 }}>
+      <p style={{ fontSize: '0.78rem', color: '#8e8775', margin: 0 }}>
         Le taux actif est celui dont la date d'effet est la plus récente antérieure ou égale au mois calculé. Les anciens mois utilisent leur taux historique.
       </p>
 
       {taxRates.length === 0 ? (
-        <p style={{ fontSize: '0.82rem', color: '#52525B', fontStyle: 'italic' }}>
+        <p style={{ fontSize: '0.82rem', color: '#8e8775', fontStyle: 'italic' }}>
           Aucun taux configuré — les calculs netAfterTax ne seront pas disponibles.
         </p>
       ) : (
@@ -570,7 +570,7 @@ function HolidaySection() {
         >
           <ChevronLeft size={14} />
         </button>
-        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.9rem', fontWeight: 700, color: '#F4F4F5', minWidth: 40, textAlign: 'center' }}>
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: '0.9rem', fontWeight: 700, color: '#f1e7d2', minWidth: 40, textAlign: 'center' }}>
           {year}
         </span>
         <button
@@ -580,7 +580,7 @@ function HolidaySection() {
           <ChevronRight size={14} />
         </button>
       </div>
-      <p style={{ fontSize: '0.78rem', color: '#71717A', margin: 0 }}>
+      <p style={{ fontSize: '0.78rem', color: '#8e8775', margin: 0 }}>
         Base légale France métropolitaine. Modifiez avec des surcharges pour votre situation.
       </p>
 
@@ -594,7 +594,7 @@ function HolidaySection() {
               <span className="holiday-date">{formatDateShort(h.date)}</span>
               <span className={`holiday-label${isRemoved ? ' holiday-label--removed' : ''}`}>
                 {h.label}
-                {h.isMobile && <span style={{ fontSize: '0.68rem', color: '#3F3F46', marginLeft: 4 }}>mobile</span>}
+                {h.isMobile && <span style={{ fontSize: '0.68rem', color: '#5a5448', marginLeft: 4 }}>mobile</span>}
               </span>
               {isRemoved ? (
                 <button
@@ -745,7 +745,7 @@ export function SettingsPage() {
         action={
           <span style={{
             fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: '#F0A020',
+            textTransform: 'uppercase', color: '#d68a3c',
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
@@ -772,14 +772,14 @@ export function SettingsPage() {
       <div style={{
         margin: '1.5rem 1rem 0',
         padding: '0.875rem',
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: 'rgba(241,231,210,0.02)',
+        border: '1px solid rgba(241,231,210,0.06)',
         borderRadius: 10,
         fontSize: '0.72rem',
-        color: '#3F3F46',
+        color: '#5a5448',
         lineHeight: 1.6,
       }}>
-        <Check size={12} style={{ display: 'inline', color: '#F0A020', marginRight: 5 }} />
+        <Check size={12} style={{ display: 'inline', color: '#d68a3c', marginRight: 5 }} />
         Les réglages sont sauvegardés automatiquement dans Firestore à chaque modification.
         Toutes les estimations sont personnelles et non officielles.
       </div>
