@@ -18,7 +18,7 @@ export function PlaceholderPage({ badge, title, description }: PlaceholderPagePr
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
       >
-        <Construction size={32} style={{ color: '#3F3F46' }} />
+        <Construction size={32} style={{ color: 'var(--ink-3)' }} />
         <span className="placeholder-badge">{badge}</span>
         <p className="placeholder-title">{title}</p>
         <p className="placeholder-desc">{description}</p>

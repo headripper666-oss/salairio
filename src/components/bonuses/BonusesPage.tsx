@@ -8,12 +8,12 @@ import { useOneOffBonuses } from '@/hooks/useOneOffBonuses'
 import type { ExtraValueMode } from '@/types/firestore'
 
 const S = {
-  card:    { background: '#1b2238', border: '1px solid rgba(241,231,210,0.07)', borderRadius: 14 } as React.CSSProperties,
-  input:   { width: '100%', background: 'rgba(241,231,210,0.04)', border: '1px solid rgba(241,231,210,0.10)', borderRadius: 10, padding: '0.55rem 0.75rem', fontSize: '0.9rem', color: '#f1e7d2', outline: 'none', fontFamily: 'inherit' } as React.CSSProperties,
-  label:   { fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#8e8775', display: 'block', marginBottom: 4 } as React.CSSProperties,
-  dialog:  { width: '100%', maxWidth: 360, background: '#1b2238', border: '1px solid rgba(241,231,210,0.10)', borderRadius: 20, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' } as React.CSSProperties,
-  btnCancel: { flex: 1, padding: '0.6rem', borderRadius: 10, border: '1px solid rgba(241,231,210,0.10)', background: 'transparent', color: '#8e8775', fontSize: '0.88rem', cursor: 'pointer' } as React.CSSProperties,
-  btnAdd:  { flex: 1, padding: '0.6rem', borderRadius: 10, border: 'none', background: '#d68a3c', color: '#1d1a17', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer' } as React.CSSProperties,
+  card:      { background: 'var(--paper-2)', border: '1px solid var(--rule)', borderRadius: 14 } as React.CSSProperties,
+  input:     { width: '100%', background: 'var(--input-bg)', border: '1px solid var(--border-default)', borderRadius: 10, padding: '0.55rem 0.75rem', fontSize: '0.9rem', color: 'var(--ink)', outline: 'none', fontFamily: 'inherit' } as React.CSSProperties,
+  label:     { fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--ink-3)', display: 'block', marginBottom: 4 } as React.CSSProperties,
+  dialog:    { width: '100%', maxWidth: 360, background: 'var(--paper-2)', border: '1px solid var(--rule)', borderRadius: 20, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' } as React.CSSProperties,
+  btnCancel: { flex: 1, padding: '0.6rem', borderRadius: 10, border: '1px solid var(--rule)', background: 'transparent', color: 'var(--ink-2)', fontSize: '0.88rem', cursor: 'pointer' } as React.CSSProperties,
+  btnAdd:    { flex: 1, padding: '0.6rem', borderRadius: 10, border: 'none', background: 'var(--amber)', color: '#1d1a17', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer' } as React.CSSProperties,
 }
 
 function monthKeyNow(): string {
@@ -42,7 +42,7 @@ function AddFixedDialog({ onClose, onAdd }: AddFixedDialogProps) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '1rem', paddingBottom: 'calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 1rem)' }}>
       <div style={S.dialog}>
-        <h3 style={{ fontWeight: 700, color: '#f1e7d2', margin: 0, fontSize: '1rem' }}>Nouvelle prime fixe</h3>
+        <h3 style={{ fontWeight: 700, color: 'var(--ink)', margin: 0, fontSize: '1rem' }}>Nouvelle prime fixe</h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div>
@@ -96,7 +96,7 @@ function AddOneOffDialog({ onClose, onAdd }: AddOneOffDialogProps) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '1rem', paddingBottom: 'calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 1rem)' }}>
       <div style={S.dialog}>
-        <h3 style={{ fontWeight: 700, color: '#f1e7d2', margin: 0, fontSize: '1rem' }}>Nouvelle prime ponctuelle</h3>
+        <h3 style={{ fontWeight: 700, color: 'var(--ink)', margin: 0, fontSize: '1rem' }}>Nouvelle prime ponctuelle</h3>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div>
@@ -150,7 +150,7 @@ export function BonusesPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Repeat size={16} color="#d68a3c" />
-              <span style={{ fontWeight: 600, color: '#f1e7d2' }}>Primes fixes</span>
+              <span style={{ fontWeight: 600, color: 'var(--ink)' }}>Primes fixes</span>
             </div>
             <button
               onClick={() => setShowFixedDialog(true)}
@@ -161,14 +161,14 @@ export function BonusesPage() {
           </div>
 
           {fixedExtras.length === 0 && (
-            <p style={{ fontSize: '0.82rem', color: '#8e8775', margin: 0, padding: '0.5rem 0' }}>Aucune prime fixe configurée.</p>
+            <p style={{ fontSize: '0.82rem', color: 'var(--ink-3)', margin: 0, padding: '0.5rem 0' }}>Aucune prime fixe configurée.</p>
           )}
 
           {fixedExtras.map(e => (
             <div key={e.id} style={{ ...S.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1rem' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '0.9rem', color: '#f1e7d2', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</p>
-                <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--ink)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</p>
+                <p style={{ fontSize: '0.72rem', color: 'var(--ink-3)', margin: 0 }}>
                   {fmtExtra(e)}{e.appliesFromMonth && ` · depuis ${e.appliesFromMonth}`}
                 </p>
               </div>
@@ -196,7 +196,7 @@ export function BonusesPage() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Gift size={16} color="#d68a3c" />
-              <span style={{ fontWeight: 600, color: '#f1e7d2' }}>Primes ponctuelles</span>
+              <span style={{ fontWeight: 600, color: 'var(--ink)' }}>Primes ponctuelles</span>
             </div>
             <button
               onClick={() => setShowOneOffDialog(true)}
@@ -207,14 +207,14 @@ export function BonusesPage() {
           </div>
 
           {bonuses.length === 0 && (
-            <p style={{ fontSize: '0.82rem', color: '#8e8775', margin: 0, padding: '0.5rem 0' }}>Aucune prime ponctuelle enregistrée.</p>
+            <p style={{ fontSize: '0.82rem', color: 'var(--ink-3)', margin: 0, padding: '0.5rem 0' }}>Aucune prime ponctuelle enregistrée.</p>
           )}
 
           {bonuses.map(b => (
             <div key={b.id} style={{ ...S.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1rem' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '0.9rem', color: '#f1e7d2', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.label}</p>
-                <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
+                <p style={{ fontSize: '0.9rem', color: 'var(--ink)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.label}</p>
+                <p style={{ fontSize: '0.72rem', color: 'var(--ink-3)', margin: 0 }}>
                   {b.amountEuros.toFixed(2)} € · {format(parseISO(`${b.monthKey}-01`), 'MMMM yyyy', { locale: fr })}
                   {b.note && ` · ${b.note}`}
                 </p>

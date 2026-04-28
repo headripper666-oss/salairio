@@ -8,7 +8,7 @@ export function DayNoteInput({ value, onChange }: DayNoteInputProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
       <label style={{
         fontSize: '0.72rem', fontWeight: 700,
-        letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8e8775',
+        letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-3)',
       }}>
         Note
       </label>
@@ -18,11 +18,11 @@ export function DayNoteInput({ value, onChange }: DayNoteInputProps) {
         value={value}
         onChange={e => onChange(e.target.value)}
         style={{
-          background: 'rgba(241,231,210,0.04)',
-          border: '1px solid rgba(241,231,210,0.10)',
+          background: 'var(--input-bg)',
+          border: '1px solid var(--border-default)',
           borderRadius: 8,
           padding: '0.5rem 0.75rem',
-          color: '#f1e7d2',
+          color: 'var(--ink)',
           fontSize: '0.85rem',
           resize: 'none',
           outline: 'none',

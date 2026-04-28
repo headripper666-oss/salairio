@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
-import { Timer, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Timer, TrendingUp, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { MonthCalendar } from '@/components/home/MonthCalendar'
 import { useUIStore } from '@/store/uiStore'
@@ -17,7 +17,7 @@ const fadeUp: Variants = {
 }
 
 export function HomePage() {
-  const { selectedYear, selectedMonth, goToPrevMonth, goToNextMonth, goToCurrentMonth } = useUIStore()
+  const { selectedYear, selectedMonth, goToPrevMonth, goToNextMonth, goToCurrentMonth, isDark, toggleDark } = useUIStore()
   const monthKey = toMonthKey(selectedYear, selectedMonth)
   const monthLabel = monthKeyToLabel(monthKey)
 
@@ -58,7 +58,21 @@ export function HomePage() {
       <PageHeader
         title={monthLabel}
         action={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {/* Bouton jour / nuit */}
+            <button
+              className="theme-toggle"
+              onClick={toggleDark}
+              type="button"
+              aria-label={isDark ? 'Passer en mode jour' : 'Passer en mode nuit'}
+            >
+              {isDark
+                ? <Sun size={13} />
+                : <Moon size={13} />
+              }
+              <span>{isDark ? 'Jour' : 'Nuit'}</span>
+            </button>
+
             <button className="btn-icon" onClick={goToPrevMonth} aria-label="Mois précédent" type="button">
               <ChevronLeft size={16} />
             </button>
@@ -88,7 +102,7 @@ export function HomePage() {
               badge="Net estimé"
               value={netValue}
               sub={netSub}
-              accent="#6b8a5a"
+              accent="var(--moss)"
               icon={<TrendingUp size={16} />}
             />
           </motion.div>
@@ -98,9 +112,9 @@ export function HomePage() {
               badge="Compteur"
               value={counterValue}
               sub={counterSub}
-              accent="#d68a3c"
+              accent="var(--amber)"
               icon={<Timer size={16} />}
-              valueColor={!counterLoading && balanceMinutes < 0 ? '#c87067' : undefined}
+              valueColor={!counterLoading && balanceMinutes < 0 ? 'var(--rose)' : undefined}
             />
           </motion.div>
         </div>
@@ -132,23 +146,31 @@ function SummaryCard({ badge, value, sub, accent, icon, valueColor }: SummaryCar
     >
       <div style={{
         display: 'flex', alignItems: 'center', gap: 5,
-        fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em',
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: '0.6rem', fontWeight: 600, letterSpacing: '0.10em',
         textTransform: 'uppercase', color: accent, marginBottom: '0.5rem',
       }}>
         {icon}
         {badge}
       </div>
       <div style={{
-        fontFamily: "'DM Mono', monospace",
-        fontSize: '1.5rem',
-        fontWeight: 700,
-        color: valueColor ?? '#f1e7d2',
+        fontFamily: 'Fraunces, serif',
+        fontSize: '1.6rem',
+        fontWeight: 600,
+        color: valueColor ?? 'var(--ink)',
         letterSpacing: '-0.02em',
         lineHeight: 1.1,
       }}>
         {value}
       </div>
-      <div style={{ fontSize: '0.68rem', color: '#8e8775', marginTop: '0.3rem' }}>{sub}</div>
+      <div style={{
+        fontSize: '0.68rem',
+        color: 'var(--ink-3)',
+        marginTop: '0.3rem',
+        fontFamily: 'JetBrains Mono, monospace',
+      }}>
+        {sub}
+      </div>
     </div>
   )
 }

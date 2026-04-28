@@ -58,8 +58,8 @@ export function CounterHistoryPage() {
           margin: '0.75rem 0 1.25rem',
           padding: '1.25rem',
           borderRadius: 14,
-          background: '#1b2238',
-          border: '1px solid rgba(241,231,210,0.07)',
+          background: 'var(--paper-2)',
+          border: '1px solid var(--rule)',
           display: 'flex', alignItems: 'center', gap: '1rem',
         }}>
           <div style={{
@@ -71,13 +71,13 @@ export function CounterHistoryPage() {
             <Timer size={22} color="#d68a3c" />
           </div>
           <div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8e8775', marginBottom: 4 }}>
+            <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 4 }}>
               Solde total
             </div>
             <div style={{
-              fontFamily: "'DM Mono', monospace",
+              fontFamily: "'JetBrains Mono', monospace",
               fontSize: '2rem', fontWeight: 700,
-              color: balanceLoading ? '#8e8775' : balanceColor,
+              color: balanceLoading ? 'var(--ink-3)' : balanceColor,
               letterSpacing: '-0.02em', lineHeight: 1,
             }}>
               {balanceLoading ? '…' : formatMinutes(balanceMinutes, { sign: balanceMinutes > 0, compact: true })}
@@ -87,13 +87,13 @@ export function CounterHistoryPage() {
 
         {/* Liste des mouvements groupés */}
         {movementsQuery.isLoading && (
-          <div style={{ textAlign: 'center', color: '#8e8775', padding: '3rem 0', fontSize: '0.85rem' }}>
+          <div style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '3rem 0', fontSize: '0.85rem' }}>
             Chargement…
           </div>
         )}
 
         {!movementsQuery.isLoading && groups.length === 0 && (
-          <div style={{ textAlign: 'center', color: '#8e8775', padding: '3rem 0' }}>
+          <div style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '3rem 0' }}>
             <Timer size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.3 }} />
             <p style={{ fontSize: '0.9rem' }}>Aucun mouvement pour l'instant</p>
             <p style={{ fontSize: '0.75rem', marginTop: 4 }}>Saisir des jours dans le calendrier pour voir les mouvements ici</p>
@@ -105,7 +105,7 @@ export function CounterHistoryPage() {
             <div style={{
               fontSize: '0.68rem', fontWeight: 700,
               letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: '#8e8775', marginBottom: '0.5rem', paddingLeft: 2,
+              color: 'var(--ink-3)', marginBottom: '0.5rem', paddingLeft: 2,
             }}>
               {monthKeyToLabel(monthKey)}
             </div>
@@ -156,8 +156,8 @@ function MovementRow({ movement: m }: { movement: CounterMovement }) {
         display: 'flex', alignItems: 'center', gap: '0.75rem',
         padding: '0.7rem 0.875rem',
         borderRadius: 12,
-        background: '#1b2238',
-        border: '1px solid rgba(241,231,210,0.05)',
+        background: 'var(--paper-2)',
+        border: '1px solid var(--rule)',
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -169,18 +169,18 @@ function MovementRow({ movement: m }: { movement: CounterMovement }) {
           }}>
             {meta.label}
           </span>
-          <span style={{ fontSize: '0.68rem', color: '#8e8775' }}>
+          <span style={{ fontSize: '0.68rem', color: 'var(--ink-3)' }}>
             {formatDateShort(m.date)}
           </span>
         </div>
         {m.note && (
-          <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <p style={{ fontSize: '0.72rem', color: 'var(--ink-3)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {m.note}
           </p>
         )}
       </div>
       <div style={{
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'JetBrains Mono', monospace",
         fontSize: '0.9rem', fontWeight: 700,
         color: isCredit ? '#6b8a5a' : '#c87067',
         flexShrink: 0,
@@ -279,8 +279,8 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
               width: 'calc(100% - 2rem)',
               maxWidth: 400,
               borderRadius: 16,
-              background: '#1b2238',
-              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--paper-2)',
+              border: '1px solid var(--rule)',
               zIndex: 51,
               padding: '1.25rem',
             }}
@@ -288,16 +288,16 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1e7d2' }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ink)' }}>
                   Ajustement manuel
                 </div>
-                <div style={{ fontSize: '0.72rem', color: '#8e8775', marginTop: 2 }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--ink-3)', marginTop: 2 }}>
                   Correction du compteur (motif obligatoire)
                 </div>
               </div>
               <button
                 type="button" onClick={handleClose}
-                style={{ background: 'none', border: 'none', color: '#8e8775', cursor: 'pointer', padding: 4 }}
+                style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer', padding: 4 }}
               >
                 <X size={18} />
               </button>
@@ -307,7 +307,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
             <div style={{ marginBottom: '1rem' }}>
               <div style={{
                 fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', color: '#8e8775', marginBottom: '0.5rem',
+                textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: '0.5rem',
               }}>
                 Durée
               </div>
@@ -328,7 +328,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
                         color: sign === s
                           ? (s === '+' ? '#34D399' : '#c87067')
                           : '#8e8775',
-                        fontFamily: "'DM Mono', monospace",
+                        fontFamily: "'JetBrains Mono', monospace",
                         fontSize: '1.1rem', fontWeight: 700,
                         transition: 'all 0.15s',
                       }}
@@ -346,12 +346,12 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
                   onChange={e => { setTimeInput(autoFormatHHMM(e.target.value)); setTimeError('') }}
                   style={{
                     flex: 1,
-                    background: '#232c47',
-                    border: `1px solid ${timeError ? '#c87067' : 'rgba(241,231,210,0.10)'}`,
+                    background: 'var(--paper-3)',
+                    border: `1px solid ${timeError ? '#c87067' : 'var(--border-default)'}`,
                     borderRadius: 10, padding: '0 0.75rem',
                     height: 40,
-                    color: '#f1e7d2',
-                    fontFamily: "'DM Mono', monospace",
+                    color: 'var(--ink)',
+                    fontFamily: "'JetBrains Mono', monospace",
                     fontSize: '1rem',
                     outline: 'none',
                   }}
@@ -366,7 +366,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
             <div style={{ marginBottom: '1.25rem' }}>
               <div style={{
                 fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', color: '#8e8775', marginBottom: '0.5rem',
+                textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: '0.5rem',
               }}>
                 Motif <span style={{ color: '#c87067' }}>*</span>
               </div>
@@ -377,10 +377,10 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
                 rows={2}
                 style={{
                   width: '100%', boxSizing: 'border-box',
-                  background: '#232c47',
-                  border: `1px solid ${noteInvalid && mutation.isError ? '#c87067' : 'rgba(241,231,210,0.10)'}`,
+                  background: 'var(--paper-3)',
+                  border: `1px solid ${noteInvalid && mutation.isError ? '#c87067' : 'var(--border-default)'}`,
                   borderRadius: 10, padding: '0.6rem 0.75rem',
-                  color: '#f1e7d2', fontSize: '0.85rem',
+                  color: 'var(--ink)', fontSize: '0.85rem',
                   resize: 'none', outline: 'none',
                   fontFamily: 'inherit',
                 }}

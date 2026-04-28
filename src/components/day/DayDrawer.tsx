@@ -96,8 +96,8 @@ export function DayDrawer({ date, existingDay, isFerie, onClose }: DayDrawerProp
         maxWidth: 480,
         maxHeight: '85vh',
         borderRadius: 16,
-        background: '#1b2238',
-        border: '1px solid rgba(241,231,210,0.08)',
+        background: 'var(--paper-2)',
+        border: '1px solid var(--rule)',
         overflowY: 'auto',
         zIndex: 51,
       }
@@ -108,8 +108,8 @@ export function DayDrawer({ date, existingDay, isFerie, onClose }: DayDrawerProp
         bottom: 0,
         borderRadius: '16px 16px 0 0',
         maxHeight: '90vh',
-        background: '#1b2238',
-        border: '1px solid rgba(241,231,210,0.08)',
+        background: 'var(--paper-2)',
+        border: '1px solid var(--rule)',
         borderBottom: 'none',
         overflowY: 'auto',
         zIndex: 51,
@@ -143,7 +143,7 @@ export function DayDrawer({ date, existingDay, isFerie, onClose }: DayDrawerProp
             {/* Handle (mobile only) */}
             {!isDesktop && (
               <div style={{ display: 'flex', justifyContent: 'center', padding: '0.75rem 0 0' }}>
-                <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(241,231,210,0.10)' }} />
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--rule)' }} />
               </div>
             )}
 
@@ -151,11 +151,11 @@ export function DayDrawer({ date, existingDay, isFerie, onClose }: DayDrawerProp
             <div style={{
               display: 'flex', alignItems: 'flex-start',
               padding: isDesktop ? '1.25rem 1.25rem 0.875rem' : '0.75rem 1.25rem 0.875rem',
-              borderBottom: '1px solid rgba(241,231,210,0.06)',
+              borderBottom: '1px solid var(--border-subtle)',
               gap: 8,
             }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1e7d2', textTransform: 'capitalize' }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ink)', textTransform: 'capitalize' }}>
                   {date ? formatDateFR(date) : ''}
                 </div>
                 {isFerie && (
@@ -176,7 +176,7 @@ export function DayDrawer({ date, existingDay, isFerie, onClose }: DayDrawerProp
                 onClick={onClose}
                 style={{
                   background: 'none', border: 'none',
-                  color: '#8e8775', cursor: 'pointer',
+                  color: 'var(--ink-3)', cursor: 'pointer',
                   padding: 4, borderRadius: 6,
                   flexShrink: 0,
                 }}
@@ -194,7 +194,7 @@ export function DayDrawer({ date, existingDay, isFerie, onClose }: DayDrawerProp
                 <div style={{
                   fontSize: '0.72rem', fontWeight: 700,
                   letterSpacing: '0.06em', textTransform: 'uppercase',
-                  color: '#8e8775', marginBottom: '0.5rem',
+                  color: 'var(--ink-3)', marginBottom: '0.5rem',
                 }}>
                   Statut
                 </div>

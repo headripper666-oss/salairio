@@ -73,19 +73,19 @@ function CounterTile({
   return (
     <div style={{ padding: '14px 10px', borderRadius: 16, background: bg, border: `1px solid ${border}` }}>
       <div style={{
-        fontFamily: "'DM Mono', monospace",
+        fontFamily: "'JetBrains Mono', monospace",
         fontSize: 10, letterSpacing: '.1em', textTransform: 'uppercase',
         color: labelColor ?? color, marginBottom: 4,
       }}>
         {label}
       </div>
       <div style={{
-        fontFamily: "'Bricolage Grotesque', sans-serif",
-        fontWeight: 700, fontSize: 20, color, lineHeight: 1,
+        fontFamily: "'Fraunces', serif",
+        fontWeight: 600, fontSize: 22, color, lineHeight: 1,
       }}>
         {value}
       </div>
-      <div style={{ fontSize: 11, color: '#8e8775', marginTop: 4 }}>{sub}</div>
+      <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 4 }}>{sub}</div>
     </div>
   )
 }
@@ -137,19 +137,9 @@ export function MonthlySummaryPage() {
       <div className="flex-1 overflow-y-auto pb-24">
         {/* Sélecteur de mois */}
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
-          <button
-            onClick={prev}
-            className="p-2 rounded-xl hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-100"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <span className="font-semibold text-zinc-100 capitalize">{monthLabel}</span>
-          <button
-            onClick={next}
-            className="p-2 rounded-xl hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-100"
-          >
-            <ChevronRight size={20} />
-          </button>
+          <button onClick={prev} className="btn-icon"><ChevronLeft size={20} /></button>
+          <span style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '1rem', color: 'var(--ink)', textTransform: 'capitalize' }}>{monthLabel}</span>
+          <button onClick={next} className="btn-icon"><ChevronRight size={20} /></button>
         </div>
 
         {isLoading && <div className="px-4"><CardSkeleton /></div>}
@@ -181,10 +171,10 @@ export function MonthlySummaryPage() {
                 <div style={{ fontFamily: "'Caveat', cursive", fontSize: 22, color: '#5a3a14', fontWeight: 700, lineHeight: 1.1 }}>
                   · salairio ·
                 </div>
-                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#8a8278', marginTop: 3 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#8a8278', marginTop: 3 }}>
                   reçu mensuel · {monthLabel}
                 </div>
-                <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: '#aaa090', marginTop: 2 }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#aaa090', marginTop: 2 }}>
                   estimation indicative · n'a pas valeur de bulletin
                 </div>
               </div>
@@ -193,7 +183,7 @@ export function MonthlySummaryPage() {
               <div style={{ height: 1, background: 'repeating-linear-gradient(90deg, #1d1a17 0 4px, transparent 4px 8px)', opacity: .28, marginBottom: 14 }} />
 
               {/* Lignes */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontFamily: "'DM Mono', monospace", fontSize: 13 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>
                 <ReceiptRow label="Salaire de base" value={fmt(result.grossBase)} />
                 {result.fixedExtrasTotal > 0 && (
                   <ReceiptRow label="Primes fixes" value={`+ ${fmt(result.fixedExtrasTotal)}`} color="#6b8a5a" />
@@ -256,11 +246,11 @@ export function MonthlySummaryPage() {
             <div className="space-y-4">
 
               {/* D'où vient ton net */}
-              <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
+              <div style={{ background: 'var(--paper-2)', border: '1px solid var(--rule)', borderRadius: 18, padding: 20 }}>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-zinc-100 text-base m-0">D'où vient ton net</h3>
+                  <h3 style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '1.05rem', color: 'var(--ink)', margin: 0 }}>D'où vient ton net</h3>
                   {result.grossTotal > 0 && (
-                    <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: '#71717A' }}>
+                    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
                       {Math.round(result.netAfterTax / result.grossTotal * 100)} % sur ton compte
                     </span>
                   )}
@@ -271,18 +261,18 @@ export function MonthlySummaryPage() {
                   return (
                     <>
                       <div style={{ display: 'flex', height: 32, borderRadius: 999, overflow: 'hidden', border: '1px solid rgba(255,255,255,.07)' }}>
-                        <div style={{ width: `${netPct}%`, background: '#6b8a5a', display: 'grid', placeItems: 'center', color: '#f6f1e7', fontFamily: "'DM Mono'", fontSize: 11, fontWeight: 600 }}>
+                        <div style={{ width: `${netPct}%`, background: '#6b8a5a', display: 'grid', placeItems: 'center', color: '#f6f1e7', fontFamily: "'JetBrains Mono'", fontSize: 11, fontWeight: 600 }}>
                           {netPct >= 22 ? `net ${Math.round(netPct)}%` : ''}
                         </div>
-                        <div style={{ width: `${cotPct}%`, background: '#c87067', display: 'grid', placeItems: 'center', color: '#f6f1e7', fontFamily: "'DM Mono'", fontSize: 11, fontWeight: 600 }}>
+                        <div style={{ width: `${cotPct}%`, background: '#c87067', display: 'grid', placeItems: 'center', color: '#f6f1e7', fontFamily: "'JetBrains Mono'", fontSize: 11, fontWeight: 600 }}>
                           {cotPct >= 15 ? `cot. ${Math.round(cotPct)}%` : ''}
                         </div>
-                        <div style={{ flex: 1, background: '#2e2c28' }} />
+                        <div style={{ flex: 1, background: 'var(--paper-3)' }} />
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', marginTop: 12, fontSize: 12, color: '#A1A1AA' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 16px', marginTop: 12, fontSize: 12, color: 'var(--ink-3)' }}>
                         <LegendDot color="#6b8a5a" label={`Net · ${fmt(result.netAfterTax)}`} />
                         <LegendDot color="#c87067" label={`Cotisations · ${fmt(result.cssEmployee + result.mutuelleEmployee)}`} />
-                        <LegendDot color="#2e2c28" label={`PAS · ${fmt(result.pasAmount)}`} />
+                        <LegendDot color="var(--paper-3)" label={`PAS · ${fmt(result.pasAmount)}`} />
                       </div>
                     </>
                   )
@@ -290,8 +280,8 @@ export function MonthlySummaryPage() {
               </div>
 
               {/* Compteur du mois */}
-              <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
-                <h3 className="font-semibold text-zinc-100 text-base mb-4">Compteur du mois</h3>
+              <div style={{ background: 'var(--paper-2)', border: '1px solid var(--rule)', borderRadius: 18, padding: 20 }}>
+                <h3 style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '1.05rem', color: 'var(--ink)', margin: '0 0 16px' }}>Compteur du mois</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                   <CounterTile
                     label="crédit" value={fmtMin(credit)} sub="heures en plus"
@@ -299,7 +289,7 @@ export function MonthlySummaryPage() {
                   />
                   <CounterTile
                     label="débit" value={fmtMin(-debit)} sub="heures dûes"
-                    bg="#0e0e16" border="rgba(255,255,255,.06)" color="#F4F4F5" labelColor="#f1c987"
+                    bg="var(--paper-3)" border="var(--rule)" color="var(--ink)" labelColor="var(--amber-soft)"
                   />
                   <CounterTile
                     label="solde" value={fmtMin(solde)} sub={solde >= 0 ? 'en avance' : 'en retard'}
@@ -311,10 +301,10 @@ export function MonthlySummaryPage() {
               </div>
 
               {/* Année — bar chart */}
-              <div className="rounded-2xl bg-zinc-900 border border-zinc-800 p-5">
+              <div style={{ background: 'var(--paper-2)', border: '1px solid var(--rule)', borderRadius: 18, padding: 20 }}>
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-semibold text-zinc-100 text-base m-0">Année {year}</h3>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: '#71717A' }}>
+                  <h3 style={{ fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '1.05rem', color: 'var(--ink)', margin: 0 }}>Année {year}</h3>
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--ink-3)' }}>
                     net après prélèvement
                   </span>
                 </div>
@@ -327,11 +317,11 @@ export function MonthlySummaryPage() {
                         <div style={{
                           width: '100%', maxWidth: 18,
                           height: v > 0 ? `${Math.max((v / barMax) * 82, 4)}px` : 4,
-                          background: isCurrent ? '#d68a3c' : (v > 0 ? '#3a3a52' : 'rgba(255,255,255,.05)'),
+                          background: isCurrent ? 'var(--amber)' : (v > 0 ? 'var(--paper-3)' : 'var(--rule)'),
                           borderRadius: '3px 3px 2px 2px',
                           transition: 'height .3s ease',
                         }} />
-                        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 9, color: isCurrent ? '#d68a3c' : '#52525B' }}>
+                        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: isCurrent ? 'var(--amber)' : 'var(--ink-4)' }}>
                           {label}
                         </div>
                       </div>
@@ -350,11 +340,11 @@ export function MonthlySummaryPage() {
               }}>
                 <TeacupIllu />
                 <div>
-                  <div style={{ fontFamily: "'Caveat', cursive", fontSize: 20, color: '#f1c987', lineHeight: 1.1, marginBottom: 4, fontWeight: 700 }}>
+                  <div style={{ fontFamily: "'Caveat', cursive", fontSize: 20, color: '#3d2a0a', lineHeight: 1.1, marginBottom: 4, fontWeight: 700 }}>
                     « beau mois »
                   </div>
-                  <div style={{ fontSize: 13, color: '#A1A1AA', lineHeight: 1.5 }}>
-                    Retrouve l'évolution dans <strong style={{ color: '#F4F4F5' }}>Tableau annuel</strong>.
+                  <div style={{ fontSize: 13, color: '#5a3a14', lineHeight: 1.5 }}>
+                    Retrouve l'évolution dans <strong>Tableau annuel</strong>.
                   </div>
                 </div>
               </div>
@@ -364,9 +354,9 @@ export function MonthlySummaryPage() {
         )}
 
         {!isLoading && !result && (
-          <div className="text-center text-zinc-500 py-12 px-4">
+          <div style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '3rem 1rem' }}>
             <p>Aucune donnée disponible.</p>
-            <p className="text-sm mt-1">Configure tes réglages pour voir l'estimation.</p>
+            <p style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>Configure tes réglages pour voir l'estimation.</p>
           </div>
         )}
       </div>

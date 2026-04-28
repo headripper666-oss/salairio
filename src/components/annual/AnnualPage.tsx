@@ -58,8 +58,8 @@ export function AnnualPage() {
               <ChevronLeft size={16} />
             </button>
             <span style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: '0.85rem', fontWeight: 700, color: '#f1e7d2',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '0.85rem', fontWeight: 700, color: 'var(--ink)',
               minWidth: 44, textAlign: 'center',
             }}>
               {year}
@@ -92,7 +92,7 @@ export function AnnualPage() {
 
         {/* Message vide */}
         {!isLoading && summaries.size === 0 && (
-          <div style={{ textAlign: 'center', color: '#8e8775', padding: '2.5rem 0' }}>
+          <div style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '2.5rem 0' }}>
             <CalendarRange size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.3 }} />
             <p style={{ fontSize: '0.9rem' }}>Aucune estimation sauvegardée pour {year}</p>
             <p style={{ fontSize: '0.75rem', marginTop: 4 }}>
@@ -103,10 +103,10 @@ export function AnnualPage() {
 
         {/* Table scrollable */}
         {(isLoading || summaries.size > 0) && (
-          <div style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid rgba(241,231,210,0.07)' }}>
+          <div style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid var(--rule)' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid rgba(241,231,210,0.07)' }}>
+                <tr style={{ borderBottom: '1px solid var(--rule)' }}>
                   {['Mois', 'Net', 'Brut', 'Supp.', 'Compteur', ''].map((h, i) => (
                     <th
                       key={i}
@@ -115,8 +115,8 @@ export function AnnualPage() {
                         textAlign: i === 0 ? 'left' : 'right',
                         fontSize: '0.6rem', fontWeight: 700,
                         letterSpacing: '0.08em', textTransform: 'uppercase',
-                        color: '#8e8775', whiteSpace: 'nowrap',
-                        background: '#1b2238',
+                        color: 'var(--ink-3)', whiteSpace: 'nowrap',
+                        background: 'var(--paper-2)',
                       }}
                     >
                       {h}
@@ -144,7 +144,7 @@ export function AnnualPage() {
         )}
 
         {/* Légende */}
-        <p style={{ fontSize: '0.65rem', color: '#5a5448', marginTop: '0.875rem', textAlign: 'center' }}>
+        <p style={{ fontSize: '0.65rem', color: 'var(--ink-4)', marginTop: '0.875rem', textAlign: 'center' }}>
           Seuls les mois sauvegardés dans Synthèse apparaissent ici.
         </p>
       </div>
@@ -168,8 +168,8 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
   const cellStyle: React.CSSProperties = {
     padding: '0.7rem 0.875rem',
     fontSize: '0.8rem',
-    color: hasSummary ? '#f1e7d2' : '#5a5448',
-    borderBottom: isLast ? 'none' : '1px solid rgba(241,231,210,0.04)',
+    color: hasSummary ? 'var(--ink)' : 'var(--ink-4)',
+    borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)',
     background: isCurrent ? 'rgba(214,138,60,0.05)' : 'transparent',
     whiteSpace: 'nowrap',
   }
@@ -194,21 +194,21 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
             </span>
           )}
         </div>
-        <div style={{ fontSize: '0.65rem', color: '#8e8775', marginTop: 1 }}>{full}</div>
+        <div style={{ fontSize: '0.65rem', color: 'var(--ink-3)', marginTop: 1 }}>{full}</div>
       </td>
 
       {/* Net */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", fontWeight: 600 }}>
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
         {hasSummary ? formatEuros(summary.netAfterTax, { decimals: 0 }) : '—'}
       </td>
 
       {/* Brut */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary ? '#A1A1AA' : '#5a5448', fontSize: '0.75rem' }}>
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", color: hasSummary ? 'var(--ink-3)' : 'var(--ink-4)', fontSize: '0.75rem' }}>
         {hasSummary ? formatEuros(summary.grossTotal, { decimals: 0 }) : '—'}
       </td>
 
       {/* Supp. payées */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary && summary.overtimePaidMinutes > 0 ? '#8aaee0' : '#5a5448', fontSize: '0.75rem' }}>
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", color: hasSummary && summary.overtimePaidMinutes > 0 ? '#8aaee0' : 'var(--ink-4)', fontSize: '0.75rem' }}>
         {hasSummary
           ? summary.overtimePaidMinutes > 0
             ? formatMinutes(summary.overtimePaidMinutes, { compact: true })
@@ -218,7 +218,7 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
       </td>
 
       {/* Compteur crédit */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'DM Mono', monospace", color: hasSummary && summary.counterCreditMinutes > 0 ? '#6b8a5a' : '#5a5448', fontSize: '0.75rem' }}>
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", color: hasSummary && summary.counterCreditMinutes > 0 ? '#6b8a5a' : 'var(--ink-4)', fontSize: '0.75rem' }}>
         {hasSummary
           ? summary.counterCreditMinutes > 0
             ? `+${formatMinutes(summary.counterCreditMinutes, { compact: true })}`
@@ -256,13 +256,13 @@ function TotalCard({ label, value, accent }: { label: string; value: string; acc
     <div style={{
       padding: '0.875rem',
       borderRadius: 12,
-      background: '#1b2238',
-      border: '1px solid rgba(241,231,210,0.07)',
+      background: 'var(--paper-2)',
+      border: '1px solid var(--rule)',
     }}>
       <div style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: accent, marginBottom: 4 }}>
         {label}
       </div>
-      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: '1.15rem', fontWeight: 700, color: '#f1e7d2' }}>
+      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '1.15rem', fontWeight: 700, color: 'var(--ink)' }}>
         {value}
       </div>
     </div>

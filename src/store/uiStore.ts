@@ -15,17 +15,21 @@ interface UIState {
 
 const now = new Date()
 
+function applyTheme(isDark: boolean) {
+  document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
+}
+
 export const useUIStore = create<UIState>()(
   persist(
     (set, get) => ({
-      isDark: true,
+      isDark: false,
       selectedYear: now.getFullYear(),
       selectedMonth: now.getMonth() + 1,
 
       toggleDark: () => {
         const next = !get().isDark
         set({ isDark: next })
-        document.documentElement.classList.toggle('dark', next)
+        applyTheme(next)
       },
 
       setSelectedMonth: (year, month) => set({ selectedYear: year, selectedMonth: month }),
@@ -61,10 +65,7 @@ export const useUIStore = create<UIState>()(
         selectedMonth: state.selectedMonth,
       }),
       onRehydrateStorage: () => (state) => {
-        // Appliquer le thème au rechargement
-        if (state) {
-          document.documentElement.classList.toggle('dark', state.isDark)
-        }
+        if (state) applyTheme(state.isDark)
       },
     }
   )

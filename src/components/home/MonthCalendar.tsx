@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { CalendarRange } from 'lucide-react'
 import { useCalendarMonth } from '@/hooks/useCalendarMonth'
 import { DayDrawer } from '@/components/day/DayDrawer'
 import { STATUS_STYLES } from '@/utils/colorUtils'
 import { getDaysInMonth, getFirstDayOfMonth, toDateStr, isToday } from '@/utils/dateUtils'
 
-const DAYS_HEADER = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+const DAYS_HEADER = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim']
 
 interface MonthCalendarProps {
   year: number
@@ -33,47 +32,64 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
   const selectedEnriched = selectedDate ? (dayMap.get(selectedDate) ?? null) : null
   const selectedIsFerie = selectedDate ? holidaySet.has(selectedDate) : false
 
+  const usedStatuses = Array.from(new Set(
+    Array.from(dayMap.values()).map(d => d.status).filter(s => s !== 'vide')
+  ))
+
   return (
     <>
-      <div className="card">
+      <div style={{
+        background: 'var(--paper-2)',
+        border: '1px solid var(--rule)',
+        borderRadius: 'var(--radius-lg)',
+        overflow: 'hidden',
+      }}>
+        {/* Header */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '0.875rem 1rem 0.75rem',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 16px 12px',
+          borderBottom: '1px solid var(--rule)',
         }}>
-          <CalendarRange size={15} style={{ color: '#8e8775' }} />
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#c5bba5' }}>
+          <h3 style={{
+            margin: 0,
+            fontFamily: 'Fraunces, serif',
+            fontWeight: 600,
+            fontSize: '1.1rem',
+            letterSpacing: '-0.01em',
+            color: 'var(--ink)',
+          }}>
             Calendrier
-          </span>
+          </h3>
           {isLoading && (
-            <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: '#8e8775' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--ink-3)', fontFamily: 'JetBrains Mono, monospace' }}>
               Chargement…
             </span>
           )}
         </div>
 
-        <div style={{ padding: '0.875rem' }}>
-          {/* En-têtes */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '0.5rem' }}>
+        <div style={{ padding: '12px' }}>
+          {/* En-têtes jours */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '6px' }}>
             {DAYS_HEADER.map((d, i) => (
-              <div
-                key={i}
-                style={{
-                  textAlign: 'center', fontSize: '0.62rem', fontWeight: 700,
-                  letterSpacing: '0.04em',
-                  color: i >= 5 ? '#8e8775' : '#5a5448',
-                  padding: '2px 0',
-                }}
-              >
+              <div key={i} style={{
+                textAlign: 'center',
+                fontSize: '0.6rem',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontWeight: 500,
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                color: i >= 5 ? 'var(--ink-3)' : 'var(--ink-3)',
+                padding: '3px 0 6px',
+              }}>
                 {d}
               </div>
             ))}
           </div>
 
           {/* Grille */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
             {cells.map((cell, i) => {
-              if (!cell) return <div key={i} />
+              if (!cell) return <div key={i} style={{ minHeight: 52 }} />
 
               const { day, date } = cell
               const enriched = dayMap.get(date)
@@ -82,6 +98,21 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
               const isHoliday = holidaySet.has(date)
               const isWkd = (i % 7) >= 5
               const todayCell = isToday(date)
+              const hasStatus = status !== 'vide'
+
+              const bgColor = isHoliday && !hasStatus
+                ? 'rgba(214,138,60,0.14)'
+                : hasStatus
+                  ? style.bgCell
+                  : 'var(--paper)'
+
+              const borderStyle = todayCell
+                ? '2px solid var(--amber)'
+                : isHoliday && !hasStatus
+                  ? '1px solid rgba(214,138,60,0.35)'
+                  : hasStatus
+                    ? `1px solid ${style.borderColor}`
+                    : '1px solid var(--rule)'
 
               return (
                 <button
@@ -89,58 +120,87 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                   type="button"
                   onClick={() => setSelectedDate(date)}
                   style={{
-                    aspectRatio: '1',
+                    minHeight: 52,
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 7,
-                    border: todayCell
-                      ? '1.5px solid rgba(214,138,60,0.55)'
-                      : status !== 'vide'
-                        ? `1px solid ${style.color}44`
-                        : '1px solid transparent',
-                    background: todayCell
-                      ? 'rgba(214,138,60,0.1)'
-                      : status !== 'vide'
-                        ? style.bgCell
-                        : 'transparent',
+                    justifyContent: 'space-between',
+                    alignItems: 'stretch',
+                    borderRadius: 12,
+                    border: borderStyle,
+                    background: bgColor,
                     cursor: 'pointer',
-                    padding: 0,
+                    padding: '5px 6px',
                     position: 'relative',
-                    transition: 'background 0.12s, border-color 0.12s',
+                    transition: 'transform 0.12s ease, box-shadow 0.12s ease',
+                    outline: 'none',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'
+                    ;(e.currentTarget as HTMLElement).style.boxShadow = '0 4px 12px -4px rgba(0,0,0,0.3)'
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.transform = ''
+                    ;(e.currentTarget as HTMLElement).style.boxShadow = ''
                   }}
                 >
-                  <span style={{
-                    fontSize: '0.78rem',
-                    fontWeight: todayCell ? 700 : 400,
-                    color: todayCell
-                      ? '#d68a3c'
-                      : status !== 'vide'
-                        ? style.color
+                  {/* Ligne haut : numéro + badge */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+                    <span style={{
+                      fontFamily: 'Fraunces, serif',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      lineHeight: 1,
+                      color: todayCell
+                        ? 'var(--amber)'
                         : isWkd || isHoliday
-                          ? '#8e8775'
-                          : '#8e8775',
-                  }}>
-                    {day}
-                  </span>
+                          ? 'var(--ink-3)'
+                          : 'var(--ink)',
+                    }}>
+                      {day}
+                    </span>
 
-                  {/* Indicateur statut */}
-                  {status !== 'vide' && (
-                    <span style={{
-                      position: 'absolute', bottom: 3,
-                      width: 4, height: 4, borderRadius: '50%',
-                      background: style.dot,
-                    }} />
-                  )}
+                    {/* Badge statut */}
+                    {hasStatus && (
+                      <span style={{
+                        fontSize: '0.52rem',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontWeight: 600,
+                        letterSpacing: '0.02em',
+                        padding: '1px 4px',
+                        borderRadius: 999,
+                        background: style.tagBg,
+                        color: style.tagColor,
+                        lineHeight: 1.6,
+                        flexShrink: 0,
+                      }}>
+                        {style.labelShort}
+                      </span>
+                    )}
 
-                  {/* Indicateur férié (sans statut) */}
-                  {isHoliday && status === 'vide' && (
-                    <span style={{
-                      position: 'absolute', bottom: 3,
+                    {/* Badge férié (sans statut) */}
+                    {isHoliday && !hasStatus && (
+                      <span style={{
+                        fontSize: '0.52rem',
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontWeight: 600,
+                        padding: '1px 4px',
+                        borderRadius: 999,
+                        background: 'var(--amber)',
+                        color: '#2a1a05',
+                        lineHeight: 1.6,
+                        flexShrink: 0,
+                      }}>
+                        F
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Point indicateur (weekend ou holiday sans statut) */}
+                  {!hasStatus && (isWkd || isHoliday) && (
+                    <div style={{
                       width: 4, height: 4, borderRadius: '50%',
-                      background: 'rgba(214,138,60,0.25)',
-                      border: '1px solid #F59E0B88',
+                      background: isHoliday ? 'rgba(214,138,60,0.5)' : 'var(--rule)',
+                      alignSelf: 'flex-end',
                     }} />
                   )}
                 </button>
@@ -149,27 +209,30 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
           </div>
 
           {/* Légende */}
-          <div style={{
-            marginTop: '0.75rem', paddingTop: '0.75rem',
-            borderTop: '1px solid rgba(241,231,210,0.04)',
-            display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1rem',
-          }}>
-            {(['matin', 'apres_midi', 'jour_supp', 'recuperation', 'conge_paye', 'conge_sans_solde', 'absence'] as const)
-              .filter(s => Array.from(dayMap.values()).some(d => d.status === s))
-              .map(s => (
+          {usedStatuses.length > 0 && (
+            <div style={{
+              marginTop: '10px', paddingTop: '10px',
+              borderTop: '1px solid var(--rule)',
+              display: 'flex', flexWrap: 'wrap', gap: '6px 12px',
+            }}>
+              {usedStatuses.map(s => (
                 <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <span style={{
                     width: 7, height: 7, borderRadius: '50%',
                     background: STATUS_STYLES[s].dot,
                     flexShrink: 0,
                   }} />
-                  <span style={{ fontSize: '0.65rem', color: '#8e8775' }}>
+                  <span style={{
+                    fontSize: '0.62rem',
+                    color: 'var(--ink-3)',
+                    fontFamily: 'JetBrains Mono, monospace',
+                  }}>
                     {STATUS_STYLES[s].label}
                   </span>
                 </div>
-              ))
-            }
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

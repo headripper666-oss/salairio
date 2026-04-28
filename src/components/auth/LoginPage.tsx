@@ -71,19 +71,18 @@ export function LoginPage() {
           >
             <h1
               style={{
-                fontFamily: "'Bricolage Grotesque', sans-serif",
-                fontSize: '1.4rem',
-                fontWeight: 800,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                color: '#f1e7d2',
+                fontFamily: "'Fraunces', serif",
+                fontSize: '1.6rem',
+                fontWeight: 600,
+                letterSpacing: '-0.01em',
+                color: 'var(--ink)',
                 margin: 0,
                 lineHeight: 1.1,
               }}
             >
-              Salairio
+              salairio
             </h1>
-            <p style={{ fontSize: '0.78rem', color: '#8e8775', marginTop: '0.3rem' }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--ink-3)', marginTop: '0.3rem' }}>
               Votre tableau de bord personnel
             </p>
           </motion.div>
@@ -164,7 +163,7 @@ export function LoginPage() {
           textAlign: 'center',
           fontSize: '0.68rem',
           letterSpacing: '0.1em',
-          color: '#5a5448',
+          color: 'var(--ink-4)',
           textTransform: 'uppercase',
         }}
       >
