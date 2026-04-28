@@ -22,8 +22,8 @@ export default defineConfig(({ mode }) => ({
         background_color: '#141a2b',
         display: 'standalone',
         orientation: 'portrait-primary',
-        start_url: '/',
-        scope: '/',
+        start_url: '/salairio/',
+        scope: '/salairio/',
         lang: 'fr',
       },
       workbox: {
