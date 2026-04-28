@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+/* v2-refonte-2026-04-28 */
 /* ─── Tailwind v4 — class-based dark mode ──────────────────── */
 @variant dark (&:where(.dark, .dark *));
 
@@ -44,6 +44,7 @@
 
 /* ─── Variables CSS non-Tailwind ──────────────────────────── */
 :root {
+  --deploy: "v2";
   --border-subtle:  rgba(241, 231, 210, 0.06);
   --border-default: rgba(241, 231, 210, 0.10);
   --border-strong:  rgba(241, 231, 210, 0.16);
