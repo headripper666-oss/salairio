@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import { Timer, TrendingUp, ChevronLeft, ChevronRight, Sun, Moon, Clock, Calendar, Coffee } from 'lucide-react'
@@ -275,7 +275,13 @@ export function HomePage() {
   const counterDisplay = counterLoading ? '…' : formatMinutes(balanceMinutes, { compact: true, sign: balanceMinutes > 0 })
 
   // ── Desktop vs mobile ──
-  const isDesktop = window.innerWidth >= 900
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 900)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 900px)')
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   if (!isDesktop) {
     // ── VUE MOBILE (inchangée) ──
@@ -319,26 +325,41 @@ export function HomePage() {
   // ── VUE DESKTOP ──
   return (
     <div style={{ padding: '0 0 2rem' }}>
-      {/* Header */}
-      <PageHeader
-        title={`${greeting}${firstName ? `, ${firstName}` : ''}.`}
-        subtitle={`Tableau de bord — ${monthLabel}`}
-        action={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button className="theme-toggle" onClick={toggleDark} type="button">
-              {isDark ? <Sun size={13} /> : <Moon size={13} />}
-              <span>{isDark ? 'Jour' : 'Nuit'}</span>
-            </button>
-            <button className="btn-icon" onClick={goToPrevMonth} type="button"><ChevronLeft size={16} /></button>
-            {!isCurrentMonth && (
-              <button className="btn-ghost" onClick={goToCurrentMonth} style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem' }} type="button">
-                Aujourd'hui
-              </button>
-            )}
-            <button className="btn-icon" onClick={goToNextMonth} type="button"><ChevronRight size={16} /></button>
+      {/* Header desktop custom */}
+      <header style={{
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+        padding: '1.75rem 1.5rem 0.75rem',
+      }}>
+        <div>
+          <div style={{
+            fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase',
+            color: 'var(--ink-3)', fontFamily: 'JetBrains Mono, monospace',
+            marginBottom: '0.3rem',
+          }}>
+            Tableau de bord — {monthLabel}
           </div>
-        }
-      />
+          <h1 style={{
+            fontFamily: 'Fraunces, serif', fontSize: '2.4rem', fontWeight: 700,
+            letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--ink)',
+            margin: 0,
+          }}>
+            {greeting}{firstName ? <>, <span style={{ color: 'var(--amber)' }}>{firstName}</span></> : null}.
+          </h1>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingBottom: 4 }}>
+          <button className="theme-toggle" onClick={toggleDark} type="button">
+            {isDark ? <Sun size={13} /> : <Moon size={13} />}
+            <span>{isDark ? 'Jour' : 'Nuit'}</span>
+          </button>
+          <button className="btn-icon" onClick={goToPrevMonth} type="button"><ChevronLeft size={16} /></button>
+          {!isCurrentMonth && (
+            <button className="btn-ghost" onClick={goToCurrentMonth} style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem' }} type="button">
+              Aujourd'hui
+            </button>
+          )}
+          <button className="btn-icon" onClick={goToNextMonth} type="button"><ChevronRight size={16} /></button>
+        </div>
+      </header>
 
       <div style={{ padding: '0 1.25rem', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
@@ -463,14 +484,32 @@ export function HomePage() {
 
             {/* Card contextuelle */}
             <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible">
-              <div className="card" style={{ padding: '1rem 1.125rem', background: 'rgba(214,138,60,0.07)', border: '1px solid rgba(214,138,60,0.18)' }}>
-                <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>☕</span>
+              <div style={{
+                borderRadius: 'var(--radius)',
+                background: isDark
+                  ? 'linear-gradient(145deg, #2a1f0e 0%, #1e1608 100%)'
+                  : 'linear-gradient(145deg, #f5ddb0 0%, #edd090 100%)',
+                border: `1px solid ${isDark ? 'rgba(214,138,60,0.22)' : 'rgba(180,110,20,0.18)'}`,
+                padding: '1.125rem 1.25rem',
+                boxShadow: isDark
+                  ? '0 2px 16px -4px rgba(214,138,60,0.18)'
+                  : '0 2px 16px -4px rgba(180,110,20,0.18)',
+              }}>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '1.6rem', lineHeight: 1, flexShrink: 0, marginTop: 2 }}>☕</span>
                   <div>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--amber)', fontFamily: 'Fraunces, serif', fontStyle: 'italic', marginBottom: '0.35rem' }}>
+                    <div style={{
+                      fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 600,
+                      fontSize: '1rem', lineHeight: 1.2,
+                      color: isDark ? '#f0c070' : '#7a4a0a',
+                      marginBottom: '0.4rem',
+                    }}>
                       « {contextMsg.title}{firstName ? `, ${firstName}` : ''} »
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: 'var(--ink-2)', lineHeight: 1.55 }}>
+                    <div style={{
+                      fontSize: '0.7rem', lineHeight: 1.6,
+                      color: isDark ? 'rgba(240,192,112,0.75)' : 'rgba(100,60,10,0.75)',
+                    }}>
                       {contextMsg.body}
                     </div>
                   </div>
