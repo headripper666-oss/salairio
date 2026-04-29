@@ -189,6 +189,9 @@ export function MonthlySummaryPage() {
               {/* Lignes */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>
                 <ReceiptRow label="Salaire de base" value={fmt(result.grossBase)} />
+                {result.ancienneteEuros > 0 && (
+                  <ReceiptRow label="Ancienneté" value={`+ ${fmt(result.ancienneteEuros)}`} color="#8aaee0" />
+                )}
                 {result.fixedExtrasTotal > 0 && (
                   <ReceiptRow label="Primes fixes" value={`+ ${fmt(result.fixedExtrasTotal)}`} color="#6b8a5a" />
                 )}

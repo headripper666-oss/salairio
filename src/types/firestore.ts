@@ -75,6 +75,7 @@ export interface UserSettings {
   pillReminderEnabled?: boolean    // activer rappels pilule
   pillReminderTimes?: PillReminderTimes
   apptReminderRules?: { minutesBefore: number }[]  // règles de rappel RDV (ex: [{1440}, {60}])
+  anciennetePct?: number   // majoration ancienneté (% du brut de base), 0 = désactivé
   updatedAt: Timestamp
 }
 

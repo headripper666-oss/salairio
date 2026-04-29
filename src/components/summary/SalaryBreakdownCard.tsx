@@ -64,6 +64,9 @@ export function SalaryBreakdownCard({ result }: Props) {
       <div style={S.divider} />
 
       <Row label="Salaire de base" value={fmt(result.grossBase)} />
+      {result.ancienneteEuros > 0 && (
+        <Row label="Ancienneté" value={`+ ${fmt(result.ancienneteEuros)}`} color="#8aaee0" small />
+      )}
       {result.fixedExtrasTotal > 0 && (
         <Row label="Primes fixes" value={`+ ${fmt(result.fixedExtrasTotal)}`} color="#6b8a5a" small />
       )}

@@ -13,6 +13,7 @@ export interface SalaryInput {
 
 export interface SalaryResult {
   grossBase: number
+  ancienneteEuros: number
   fixedExtrasTotal: number
   oneOffBonusesTotal: number
   overtimePaidMinutes: number
@@ -36,6 +37,7 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
   const mealCount = input.mealCount ?? 0
 
   const grossBase = settings.hourlyRateGross * settings.monthlyBaseHours
+  const ancienneteEuros = grossBase * ((settings.anciennetePct ?? 0) / 100)
 
   const fixedExtrasTotal = fixedExtras
     .filter(e => e.isActive && (!e.appliesFromMonth || e.appliesFromMonth <= monthKey))
@@ -52,7 +54,7 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
   const overtimePaidMinutes = paidMovements.reduce((acc, m) => acc + Math.abs(m.quantityMinutes), 0)
   const overtimePaidEuros = paidMovements.reduce((acc, m) => acc + Math.abs(m.valuationEuros), 0)
 
-  const grossTotal = grossBase + fixedExtrasTotal + oneOffBonusesTotal + overtimePaidEuros
+  const grossTotal = grossBase + ancienneteEuros + fixedExtrasTotal + oneOffBonusesTotal + overtimePaidEuros
 
   const cssEmployee = grossTotal * (settings.cssRatePercent / 100)
   const mutuelleEmployee = settings.mutuelleEmployee
@@ -71,6 +73,7 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
 
   return {
     grossBase,
+    ancienneteEuros,
     fixedExtrasTotal,
     oneOffBonusesTotal,
     overtimePaidMinutes,

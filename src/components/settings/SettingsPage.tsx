@@ -354,6 +354,7 @@ function MajorationsSection() {
     () => settings?.majorationRules ?? [],
   )
   const [mode, setMode] = useState(() => settings?.majorationMode ?? 'priorite')
+  const [anciennetePct, setAnciennetePct] = useState(() => settings?.anciennetePct ?? 0)
 
   const toggleRule = (key: string) => {
     const next = rules.map(r => r.key === key ? { ...r, enabled: !r.enabled } : r)
@@ -471,6 +472,46 @@ function MajorationsSection() {
           </div>
         ))}
       </div>
+
+      <div className="settings-divider" />
+      <div className="settings-section-title">Ancienneté</div>
+      <div className="settings-row">
+        <button
+          type="button"
+          className={`toggle-btn${anciennetePct > 0 ? ' toggle-btn--on' : ''}`}
+          onClick={() => {
+            const next = anciennetePct > 0 ? 0 : 3
+            setAnciennetePct(next)
+            updateSettings({ anciennetePct: next }, { onSuccess: show })
+          }}
+          aria-label={anciennetePct > 0 ? 'Désactiver ancienneté' : 'Activer ancienneté'}
+        />
+        <span className={`settings-row-label${anciennetePct === 0 ? ' settings-row-label--muted' : ''}`}>
+          Majoration ancienneté
+        </span>
+        <div className="rate-input-wrap">
+          <input
+            type="number"
+            value={anciennetePct}
+            onChange={e => {
+              const val = Math.max(0, Math.min(50, parseFloat(e.target.value) || 0))
+              setAnciennetePct(val)
+            }}
+            onBlur={() => updateSettings({ anciennetePct }, { onSuccess: show })}
+            className="rate-input"
+            disabled={anciennetePct === 0}
+            min="0"
+            max="50"
+            step="0.5"
+          />
+          <span className="rate-suffix">%</span>
+        </div>
+      </div>
+      <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
+        {anciennetePct > 0
+          ? `Ajoute ${anciennetePct} % du salaire de base au brut chaque mois.`
+          : 'Activez pour appliquer une majoration fixe liée à l\'ancienneté.'}
+      </p>
     </AccordionSection>
   )
 }
@@ -1284,7 +1325,7 @@ export function SettingsPage() {
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
-            V1.2C
+            V1.2D
           </span>
         }
       />
