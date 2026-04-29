@@ -308,9 +308,12 @@ export function HomePage() {
   }, [])
 
   if (!isDesktop) {
-    // ── VUE MOBILE (inchangée) ──
+    // ── VUE MOBILE ──
     return (
-      <div style={{ padding: '0 0 1.5rem' }}>
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        height: 'calc(100dvh - var(--nav-height-mobile))',
+      }}>
         <PageHeader
           title={monthLabel}
           action={
@@ -329,8 +332,15 @@ export function HomePage() {
             </div>
           }
         />
-        <div style={{ padding: '0 1rem', display: 'flex', flexDirection: 'column', gap: '0.875rem', maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <div style={{
+          flex: 1, minHeight: 0,
+          display: 'flex', flexDirection: 'column',
+          gap: '0.75rem',
+          padding: '0.75rem 0.875rem 0.875rem',
+          maxWidth: 900, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+        }}>
+          {/* KPIs */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', flexShrink: 0 }}>
             <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
               <KpiCard label="Net estimé" value={netDisplay} accent="var(--moss)" icon={<TrendingUp size={14} />} />
             </motion.div>
@@ -338,8 +348,11 @@ export function HomePage() {
               <KpiCard label="Compteur" value={counterDisplay} accent="var(--amber)" icon={<Timer size={14} />} danger={!counterLoading && balanceMinutes < 0} />
             </motion.div>
           </div>
-          <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible">
-            <MonthCalendar year={selectedYear} month={selectedMonth} />
+          {/* Calendrier étiré */}
+          <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible"
+            style={{ flex: 1, minHeight: 0 }}
+          >
+            <MonthCalendar year={selectedYear} month={selectedMonth} stretch />
           </motion.div>
         </div>
       </div>

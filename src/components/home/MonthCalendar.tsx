@@ -12,6 +12,7 @@ const DAYS_HEADER = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim']
 interface MonthCalendarProps {
   year: number
   month: number
+  stretch?: boolean
 }
 
 function useIsMobile() {
@@ -24,7 +25,7 @@ function useIsMobile() {
   return mobile
 }
 
-export function MonthCalendar({ year, month }: MonthCalendarProps) {
+export function MonthCalendar({ year, month, stretch = false }: MonthCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const isMobile = useIsMobile()
   const { dayMap, holidaySet, isLoading } = useCalendarMonth(year, month)
@@ -69,6 +70,7 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
         border: '1px solid var(--rule)',
         borderRadius: 'var(--radius-lg)',
         overflow: 'hidden',
+        ...(stretch ? { height: '100%', display: 'flex', flexDirection: 'column' } : {}),
       }}>
         {/* Header */}
         <div style={{
@@ -93,7 +95,10 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
           )}
         </div>
 
-        <div style={{ padding: isMobile ? '6px' : '12px' }}>
+        <div style={{
+          padding: isMobile ? '6px' : '12px',
+          ...(stretch ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } : {}),
+        }}>
           {/* En-têtes jours */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: isMobile ? '3px' : '6px' }}>
             {DAYS_HEADER.map((d, i) => (
@@ -113,9 +118,14 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
           </div>
 
           {/* Grille */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMobile ? '2px' : '4px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gap: isMobile ? '2px' : '4px',
+            ...(stretch ? { flex: 1, gridAutoRows: '1fr', minHeight: 0 } : {}),
+          }}>
             {cells.map((cell, i) => {
-              if (!cell) return <div key={i} style={{ minHeight: isMobile ? 52 : 80 }} />
+              if (!cell) return <div key={i} style={stretch ? {} : { minHeight: isMobile ? 52 : 80 }} />
 
               const { day, date } = cell
               const enriched = dayMap.get(date)
@@ -147,7 +157,7 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                   type="button"
                   onClick={() => setSelectedDate(date)}
                   style={{
-                    minHeight: isMobile ? 52 : 80,
+                    ...(stretch ? { height: '100%' } : { minHeight: isMobile ? 52 : 80 }),
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
