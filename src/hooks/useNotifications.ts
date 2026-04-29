@@ -1,14 +1,21 @@
 // Notifications via Web Push — le serveur Render planifie et envoie les push.
 // Le SW reçoit l'event push et affiche la notification, même app fermée.
 
+import { useAuthStore } from '@/store/authStore'
+
 const PUSH_SERVER = 'https://salairio-push.onrender.com'
 
 let subscriptionCache: PushSubscription | null = null
 
+function getUserId(): string | null {
+  return useAuthStore.getState().user?.uid ?? null
+}
+
 async function getSubscription(): Promise<PushSubscription | null> {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null
 
-  if (subscriptionCache) return subscriptionCache
+  const userId = getUserId()
+  if (!userId) return null
 
   try {
     const reg = await navigator.serviceWorker.ready
@@ -21,14 +28,18 @@ async function getSubscription(): Promise<PushSubscription | null> {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(key),
       })
+    }
+
+    // Toujours envoyer au serveur pour enregistrer cet appareil sous le userId
+    if (!subscriptionCache) {
       await fetch(`${PUSH_SERVER}/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sub),
+        body: JSON.stringify({ userId, ...sub.toJSON() }),
       })
+      subscriptionCache = sub
     }
 
-    subscriptionCache = sub
     return sub
   } catch {
     return null
@@ -59,13 +70,14 @@ export function isNotificationGranted(): boolean {
 
 export async function scheduleNotification(id: string, title: string, body: string, at: Date) {
   if (!isNotificationGranted()) return
-  const sub = await getSubscription()
-  if (!sub) return
+  const userId = getUserId()
+  if (!userId) return
+  await getSubscription()
 
   await fetch(`${PUSH_SERVER}/schedule`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, endpoint: sub.endpoint, title, body, at: at.getTime() }),
+    body: JSON.stringify({ id, userId, title, body, at: at.getTime() }),
   }).catch(() => {})
 }
 
