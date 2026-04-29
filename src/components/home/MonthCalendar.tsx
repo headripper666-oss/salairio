@@ -186,45 +186,45 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                       {day}
                     </span>
 
-                    {/* Badge statut */}
-                    {hasStatus && (
-                      <span style={{
-                        fontSize: isMobile ? '0.44rem' : '0.52rem',
-                        fontFamily: 'JetBrains Mono, monospace',
-                        fontWeight: 600,
-                        letterSpacing: '0.02em',
-                        padding: isMobile ? '1px 3px' : '1px 4px',
-                        borderRadius: 999,
-                        background: style.tagBg,
-                        color: style.tagColor,
-                        lineHeight: 1.6,
-                        flexShrink: 0,
-                      }}>
-                        {style.labelShort}
-                      </span>
-                    )}
-
-                    {/* Badge férié (sans statut) */}
-                    {isHoliday && !hasStatus && (
-                      <span style={{
-                        fontSize: isMobile ? '0.44rem' : '0.52rem',
-                        fontFamily: 'JetBrains Mono, monospace',
-                        fontWeight: 600,
-                        padding: isMobile ? '1px 3px' : '1px 4px',
-                        borderRadius: 999,
-                        background: 'var(--amber)',
-                        color: '#2a1a05',
-                        lineHeight: 1.6,
-                        flexShrink: 0,
-                      }}>
-                        F
-                      </span>
-                    )}
+                    {/* Badges : statut + férié (empilés si les deux) */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+                      {hasStatus && (
+                        <span style={{
+                          fontSize: isMobile ? '0.44rem' : '0.52rem',
+                          fontFamily: 'JetBrains Mono, monospace',
+                          fontWeight: 600,
+                          letterSpacing: '0.02em',
+                          padding: isMobile ? '1px 3px' : '1px 4px',
+                          borderRadius: 999,
+                          background: style.tagBg,
+                          color: style.tagColor,
+                          lineHeight: 1.6,
+                          flexShrink: 0,
+                        }}>
+                          {style.labelShort}
+                        </span>
+                      )}
+                      {isHoliday && (
+                        <span style={{
+                          fontSize: isMobile ? '0.40rem' : '0.46rem',
+                          fontFamily: 'JetBrains Mono, monospace',
+                          fontWeight: 700,
+                          padding: isMobile ? '1px 2px' : '1px 3px',
+                          borderRadius: 999,
+                          background: hasStatus ? 'rgba(214,138,60,0.22)' : 'var(--amber)',
+                          color: hasStatus ? 'var(--amber)' : '#2a1a05',
+                          lineHeight: 1.6,
+                          flexShrink: 0,
+                        }}>
+                          F
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Bas de cellule : point weekend/férié + blocs RDV */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 3 }}>
-                    {!hasStatus && (isWkd || isHoliday) && dayAppts.length === 0 && (
+                    {(isWkd || isHoliday) && !hasStatus && dayAppts.length === 0 && (
                       <div style={{
                         width: 4, height: 4, borderRadius: '50%',
                         background: isHoliday ? 'rgba(214,138,60,0.5)' : 'var(--rule)',
