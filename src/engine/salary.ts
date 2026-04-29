@@ -37,7 +37,8 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
   const mealCount = input.mealCount ?? 0
 
   const grossBase = settings.hourlyRateGross * settings.monthlyBaseHours
-  const ancienneteEuros = grossBase * ((settings.anciennetePct ?? 0) / 100)
+  const ancienneteBase = settings.ancienneteBaseSalaire ?? grossBase
+  const ancienneteEuros = ancienneteBase * ((settings.anciennetePct ?? 0) / 100)
 
   const fixedExtrasTotal = fixedExtras
     .filter(e => e.isActive && (!e.appliesFromMonth || e.appliesFromMonth <= monthKey))

@@ -355,6 +355,7 @@ function MajorationsSection() {
   )
   const [mode, setMode] = useState(() => settings?.majorationMode ?? 'priorite')
   const [anciennetePct, setAnciennetePct] = useState(() => settings?.anciennetePct ?? 0)
+  const [ancienneteBase, setAncienneteBase] = useState(() => settings?.ancienneteBaseSalaire ?? 0)
 
   const toggleRule = (key: string) => {
     const next = rules.map(r => r.key === key ? { ...r, enabled: !r.enabled } : r)
@@ -475,6 +476,30 @@ function MajorationsSection() {
 
       <div className="settings-divider" />
       <div className="settings-section-title">Ancienneté</div>
+
+      {/* Salaire de référence du poste */}
+      <div className="settings-row">
+        <span className="settings-row-label">Salaire de référence du poste</span>
+        <div className="rate-input-wrap" style={{ gap: 4 }}>
+          <input
+            type="number"
+            value={ancienneteBase || ''}
+            placeholder="0"
+            onChange={e => setAncienneteBase(parseFloat(e.target.value) || 0)}
+            onBlur={() => updateSettings({ ancienneteBaseSalaire: ancienneteBase }, { onSuccess: show })}
+            className="rate-input"
+            style={{ width: 80 }}
+            min="0"
+            step="10"
+          />
+          <span className="rate-suffix">€</span>
+        </div>
+      </div>
+      <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: '0 0 8px' }}>
+        Salaire brut mensuel de référence du poste (grille de la convention collective). Si vide, le salaire de base de l'utilisateur est utilisé.
+      </p>
+
+      {/* Taux ancienneté */}
       <div className="settings-row">
         <button
           type="button"
@@ -487,7 +512,7 @@ function MajorationsSection() {
           aria-label={anciennetePct > 0 ? 'Désactiver ancienneté' : 'Activer ancienneté'}
         />
         <span className={`settings-row-label${anciennetePct === 0 ? ' settings-row-label--muted' : ''}`}>
-          Majoration ancienneté
+          Taux d'ancienneté
         </span>
         <div className="rate-input-wrap">
           <input
@@ -507,11 +532,13 @@ function MajorationsSection() {
           <span className="rate-suffix">%</span>
         </div>
       </div>
-      <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
-        {anciennetePct > 0
-          ? `Ajoute ${anciennetePct} % du salaire de base au brut chaque mois.`
-          : 'Activez pour appliquer une majoration fixe liée à l\'ancienneté.'}
-      </p>
+      {anciennetePct > 0 && (
+        <p style={{ fontSize: '0.72rem', color: '#8e8775', margin: 0 }}>
+          Prime = {anciennetePct} % × {ancienneteBase > 0 ? `${ancienneteBase.toFixed(2)} €` : 'salaire de base'} = <strong style={{ color: '#d68a3c' }}>
+            {((ancienneteBase > 0 ? ancienneteBase : 0) * anciennetePct / 100).toFixed(2)} €
+          </strong> / mois
+        </p>
+      )}
     </AccordionSection>
   )
 }
@@ -1325,7 +1352,7 @@ export function SettingsPage() {
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
-            V1.2D
+            V1.2E
           </span>
         }
       />
