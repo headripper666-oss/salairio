@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import {
   DollarSign, Clock, Zap, TrendingUp, CalendarDays, Bell,
-  ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2, Check,
+  ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2, Check, AlertTriangle,
 } from 'lucide-react'
 import { requestNotificationPermission, scheduleNotification, isNotificationGranted, getScheduledIds } from '@/hooks/useNotifications'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -12,6 +12,9 @@ import { useHolidayOverrides } from '@/hooks/useHolidayOverrides'
 import { getPublicHolidays } from '@/engine/calendar'
 import { BASE_MONTHLY_HOURS } from '@/engine/constants'
 import { formatDateShort, monthKeyToLabel } from '@/utils/formatters'
+import { cleanMonth, cleanYear, resetAccount } from '@/services/firestore/cleanup'
+import { useAuthStore } from '@/store/authStore'
+import { useQueryClient } from '@tanstack/react-query'
 import type { MajorationRule, ShiftDefinition } from '@/types/firestore'
 
 // ─── Hook save indicator ───────────────────────────────────────────────────────
@@ -1017,6 +1020,216 @@ function RemindersSection() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// ZONE DE DANGER
+// ═══════════════════════════════════════════════════════════
+
+const CURRENT_YEAR = new Date().getFullYear()
+const YEARS = Array.from({ length: 5 }, (_, i) => CURRENT_YEAR - i)
+const MONTHS = [
+  'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+  'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+]
+
+function DangerZoneSection() {
+  const uid = useAuthStore(s => s.user?.uid) ?? null
+  const queryClient = useQueryClient()
+
+  const [monthYear, setMonthYear] = useState(CURRENT_YEAR)
+  const [monthMonth, setMonthMonth] = useState(new Date().getMonth() + 1)
+  const [yearYear, setYearYear] = useState(CURRENT_YEAR)
+  const [resetInput, setResetInput] = useState('')
+  const [pendingAction, setPendingAction] = useState<'month' | 'year' | 'reset' | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState<string | null>(null)
+
+  const monthKey = `${monthYear}-${String(monthMonth).padStart(2, '0')}`
+
+  async function runClean(action: 'month' | 'year' | 'reset') {
+    if (!uid) return
+    setBusy(true)
+    setDone(null)
+    try {
+      if (action === 'month') {
+        await cleanMonth(uid, monthKey)
+        setDone(`Mois ${MONTHS[monthMonth - 1]} ${monthYear} nettoyé.`)
+      } else if (action === 'year') {
+        await cleanYear(uid, yearYear)
+        setDone(`Année ${yearYear} nettoyée.`)
+      } else {
+        await resetAccount(uid)
+        setDone('Compte réinitialisé. Toutes les données de pointage ont été supprimées.')
+        setResetInput('')
+      }
+      queryClient.invalidateQueries()
+    } catch {
+      setDone('Une erreur est survenue. Réessaie.')
+    } finally {
+      setBusy(false)
+      setPendingAction(null)
+    }
+  }
+
+  const selectStyle: React.CSSProperties = {
+    padding: '0.4rem 0.6rem', borderRadius: 6,
+    border: '1px solid var(--rule)', background: 'var(--paper)',
+    color: 'var(--ink)', fontSize: '0.75rem', fontFamily: 'inherit', cursor: 'pointer',
+  }
+
+  const dangerBtn = (label: string, disabled?: boolean, onClick?: () => void): React.ReactNode => (
+    <button
+      type="button"
+      disabled={disabled || busy}
+      onClick={onClick}
+      style={{
+        padding: '0.45rem 0.875rem', borderRadius: 6,
+        border: '1px solid rgba(200,112,103,0.5)',
+        background: disabled || busy ? 'var(--paper-3)' : 'rgba(200,112,103,0.1)',
+        color: disabled || busy ? 'var(--ink-4)' : 'var(--rose)',
+        fontSize: '0.72rem', fontWeight: 600, cursor: disabled || busy ? 'default' : 'pointer',
+        display: 'flex', alignItems: 'center', gap: 5,
+      }}
+    >
+      <Trash2 size={13} /> {label}
+    </button>
+  )
+
+  return (
+    <div style={{
+      margin: '1.25rem 0 0',
+      borderRadius: 'var(--radius)',
+      border: '1px solid rgba(200,112,103,0.25)',
+      overflow: 'hidden',
+    }}>
+      {/* En-tête */}
+      <div style={{
+        padding: '0.875rem 1rem',
+        background: 'rgba(200,112,103,0.06)',
+        borderBottom: '1px solid rgba(200,112,103,0.15)',
+        display: 'flex', alignItems: 'center', gap: '0.625rem',
+      }}>
+        <AlertTriangle size={15} color="var(--rose)" />
+        <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--rose)', fontFamily: 'JetBrains Mono, monospace' }}>
+          Zone de danger
+        </span>
+        <span style={{ fontSize: '0.65rem', color: 'var(--ink-3)', marginLeft: 4 }}>
+          — Suppressions irréversibles
+        </span>
+      </div>
+
+      <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+        {/* Retour d'action */}
+        <AnimatePresence>
+          {done && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              style={{ padding: '0.5rem 0.75rem', borderRadius: 6, background: 'rgba(107,138,90,0.12)', border: '1px solid rgba(107,138,90,0.25)', fontSize: '0.7rem', color: 'var(--moss)' }}
+            >
+              ✓ {done}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Nettoyer un mois ── */}
+        <div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--ink-2)', marginBottom: '0.5rem' }}>
+            Nettoyer un mois
+          </div>
+          <div style={{ fontSize: '0.62rem', color: 'var(--ink-3)', marginBottom: '0.625rem', lineHeight: 1.5 }}>
+            Supprime tous les postes, mouvements compteur et primes du mois sélectionné.
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select value={monthYear} onChange={e => setMonthYear(Number(e.target.value))} style={selectStyle}>
+              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <select value={monthMonth} onChange={e => setMonthMonth(Number(e.target.value))} style={selectStyle}>
+              {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+            </select>
+            {pendingAction === 'month' ? (
+              <>
+                <span style={{ fontSize: '0.65rem', color: 'var(--rose)', fontWeight: 600 }}>Confirmer ?</span>
+                <button type="button" onClick={() => runClean('month')} disabled={busy} style={{ ...selectStyle, background: 'var(--rose)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                  {busy ? '…' : 'Oui, supprimer'}
+                </button>
+                <button type="button" onClick={() => setPendingAction(null)} style={{ ...selectStyle }}>Annuler</button>
+              </>
+            ) : (
+              dangerBtn('Nettoyer ce mois', false, () => setPendingAction('month'))
+            )}
+          </div>
+        </div>
+
+        <div style={{ height: 1, background: 'rgba(200,112,103,0.12)' }} />
+
+        {/* ── Nettoyer une année ── */}
+        <div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--ink-2)', marginBottom: '0.5rem' }}>
+            Nettoyer une année complète
+          </div>
+          <div style={{ fontSize: '0.62rem', color: 'var(--ink-3)', marginBottom: '0.625rem', lineHeight: 1.5 }}>
+            Supprime 12 mois d'un coup : postes, compteur, primes et synthèses de l'année.
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select value={yearYear} onChange={e => setYearYear(Number(e.target.value))} style={selectStyle}>
+              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            {pendingAction === 'year' ? (
+              <>
+                <span style={{ fontSize: '0.65rem', color: 'var(--rose)', fontWeight: 600 }}>Confirmer la suppression de {yearYear} ?</span>
+                <button type="button" onClick={() => runClean('year')} disabled={busy} style={{ ...selectStyle, background: 'var(--rose)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                  {busy ? '…' : 'Oui, supprimer'}
+                </button>
+                <button type="button" onClick={() => setPendingAction(null)} style={selectStyle}>Annuler</button>
+              </>
+            ) : (
+              dangerBtn('Nettoyer cette année', false, () => setPendingAction('year'))
+            )}
+          </div>
+        </div>
+
+        <div style={{ height: 1, background: 'rgba(200,112,103,0.12)' }} />
+
+        {/* ── Réinitialiser le compte ── */}
+        <div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--rose)', marginBottom: '0.5rem' }}>
+            Réinitialiser le compte
+          </div>
+          <div style={{ fontSize: '0.62rem', color: 'var(--ink-3)', marginBottom: '0.625rem', lineHeight: 1.5 }}>
+            Supprime <strong>toutes</strong> les données de pointage (postes, compteur, RDV, primes, synthèses).
+            Tes réglages de profil et de paie sont conservés. <strong>Cette action est définitive.</strong>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              value={resetInput}
+              onChange={e => setResetInput(e.target.value)}
+              placeholder='Tape "REINITIALISER" pour confirmer'
+              style={{ ...selectStyle, minWidth: 260 }}
+            />
+            <button
+              type="button"
+              disabled={resetInput !== 'REINITIALISER' || busy}
+              onClick={() => runClean('reset')}
+              style={{
+                padding: '0.45rem 0.875rem', borderRadius: 6, border: 'none',
+                background: resetInput === 'REINITIALISER' && !busy ? 'var(--rose)' : 'var(--paper-3)',
+                color: resetInput === 'REINITIALISER' && !busy ? '#fff' : 'var(--ink-4)',
+                fontSize: '0.72rem', fontWeight: 700,
+                cursor: resetInput === 'REINITIALISER' && !busy ? 'pointer' : 'default',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              <AlertTriangle size={13} /> {busy ? 'Suppression…' : 'Tout supprimer'}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
 // PAGE PRINCIPALE
 // ═══════════════════════════════════════════════════════════
 export function SettingsPage() {
@@ -1090,6 +1303,7 @@ export function SettingsPage() {
         <TaxRateSection />
         <HolidaySection />
         <RemindersSection />
+        <DangerZoneSection />
       </motion.div>
 
       {/* Note de bas de page */}

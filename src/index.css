@@ -967,6 +967,20 @@ input, button, select, textarea { font-family: inherit; }
 
 .settings-row-label--muted { color: var(--ink-3); font-style: italic; }
 
+.label-edit-input {
+  flex: 1;
+  font-size: 0.84rem;
+  color: var(--ink-2);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--accent, #8a7a5a);
+  outline: none;
+  padding: 0;
+  font-family: inherit;
+  min-width: 0;
+  width: 0;
+}
+
 /* ─── Toggle switch ─────────────────────────────────────── */
 
 .toggle-btn {

@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import {
   Home, TrendingUp, Timer, Banknote,
-  Settings2, CalendarRange, LogOut,
+  Settings2, CalendarRange, LogOut, CalendarDays,
 } from 'lucide-react'
 import { signOut } from '@/lib/firebase'
 import { auth } from '@/lib/firebase'
@@ -12,9 +12,10 @@ const NAV_ITEMS = [
   { path: '/home',     Icon: Home,          label: 'Accueil',          section: 'main' },
   { path: '/summary',  Icon: TrendingUp,     label: 'Synthèse mensuelle', section: 'main' },
   { path: '/counter',  Icon: Timer,          label: 'Compteur heures',  section: 'main' },
-  { path: '/bonuses',  Icon: Banknote,       label: 'Primes',           section: 'main' },
-  { path: '/annual',   Icon: CalendarRange,  label: 'Tableau annuel',   section: 'views' },
-  { path: '/settings', Icon: Settings2,      label: 'Réglages',         section: 'config' },
+  { path: '/bonuses',       Icon: Banknote,       label: 'Primes',           section: 'main' },
+  { path: '/appointments',  Icon: CalendarDays,   label: 'Rendez-vous',      section: 'main' },
+  { path: '/annual',        Icon: CalendarRange,  label: 'Tableau annuel',   section: 'views' },
+  { path: '/settings',      Icon: Settings2,      label: 'Réglages',         section: 'config' },
 ]
 
 export function Sidebar() {

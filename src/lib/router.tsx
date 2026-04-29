@@ -8,6 +8,7 @@ import { MonthlySummaryPage } from '@/components/summary/MonthlySummaryPage'
 import { BonusesPage } from '@/components/bonuses/BonusesPage'
 import { CounterHistoryPage } from '@/components/counter/CounterHistoryPage'
 import { AnnualPage } from '@/components/annual/AnnualPage'
+import { AppointmentsPage } from '@/components/appointments/AppointmentsPage'
 
 export const router = createHashRouter([
   {
@@ -29,6 +30,7 @@ export const router = createHashRouter([
       { path: 'counter', element: <CounterHistoryPage /> },
       { path: 'bonuses', element: <BonusesPage /> },
       { path: 'annual', element: <AnnualPage /> },
+      { path: 'appointments', element: <AppointmentsPage /> },
     ],
   },
   {

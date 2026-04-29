@@ -7,6 +7,8 @@ export interface SalaryInput {
   counterMovements: CounterMovement[]
   pasRate: number
   monthKey: string
+  mealCostTotal?: number  // retenue repas du mois (€)
+  mealCount?: number      // nombre total de repas du mois
 }
 
 export interface SalaryResult {
@@ -18,6 +20,8 @@ export interface SalaryResult {
   grossTotal: number
   cssEmployee: number
   mutuelleEmployee: number
+  mealCostTotal: number
+  mealCount: number
   netImposable: number
   pasRate: number
   pasAmount: number
@@ -28,6 +32,8 @@ export interface SalaryResult {
 
 export function computeMonthlySalary(input: SalaryInput): SalaryResult {
   const { settings, fixedExtras, oneOffBonuses, counterMovements, pasRate, monthKey } = input
+  const mealCostTotal = input.mealCostTotal ?? 0
+  const mealCount = input.mealCount ?? 0
 
   const grossBase = settings.hourlyRateGross * settings.monthlyBaseHours
 
@@ -50,7 +56,7 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
 
   const cssEmployee = grossTotal * (settings.cssRatePercent / 100)
   const mutuelleEmployee = settings.mutuelleEmployee
-  const netImposable = grossTotal - cssEmployee - mutuelleEmployee
+  const netImposable = grossTotal - cssEmployee - mutuelleEmployee - mealCostTotal
 
   const pasAmount = netImposable * (pasRate / 100)
   const netAfterTax = netImposable - pasAmount
@@ -72,6 +78,8 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
     grossTotal,
     cssEmployee,
     mutuelleEmployee,
+    mealCostTotal,
+    mealCount,
     netImposable,
     pasRate,
     pasAmount,

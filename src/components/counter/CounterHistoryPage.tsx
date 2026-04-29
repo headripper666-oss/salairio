@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, X, Timer } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -7,6 +7,8 @@ import { useAuthStore } from '@/store/authStore'
 import { useCounterBalance } from '@/hooks/useCounterBalance'
 import { getCounterMovements, addCounterMovement } from '@/services/firestore/counterMovements'
 import { formatMinutes, formatDateShort, monthKeyToLabel, toMonthKey, parseHHMM, autoFormatHHMM } from '@/utils/formatters'
+import { getMotivationalMessage, resolveCategory } from '@/utils/motivationalMessages'
+import { useUIStore } from '@/store/uiStore'
 import type { CounterMovement, MovementType } from '@/types/firestore'
 
 // ─── Labels et couleurs par type de mouvement ─────────────────────────────────
@@ -34,6 +36,15 @@ function groupByMonth(movements: CounterMovement[]): { monthKey: string; items: 
 export function CounterHistoryPage() {
   const uid = useAuthStore(s => s.user?.uid) ?? null
   const [dialogOpen, setDialogOpen] = useState(false)
+  const { isDark } = useUIStore()
+
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 900)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 900px)')
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   const { balanceMinutes, isLoading: balanceLoading } = useCounterBalance()
 
@@ -46,6 +57,9 @@ export function CounterHistoryPage() {
 
   const groups = groupByMonth(movementsQuery.data ?? [])
   const balanceColor = balanceMinutes < 0 ? '#c87067' : balanceMinutes > 0 ? '#6b8a5a' : '#8e8775'
+
+  const motivCategory = resolveCategory({ balanceMinutes, overtimeMinutes: 0, workedCount: 0, totalDays: 1 })
+  const motivMsg = getMotivationalMessage(motivCategory, 2)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -84,6 +98,34 @@ export function CounterHistoryPage() {
             </div>
           </div>
         </div>
+
+        {/* Encart motivant — PC uniquement */}
+        {isDesktop && (
+          <div style={{
+            borderRadius: 'var(--radius)',
+            background: isDark
+              ? 'linear-gradient(145deg, #2a1f0e 0%, #1e1608 100%)'
+              : 'linear-gradient(145deg, #f5ddb0 0%, #edd090 100%)',
+            border: `1px solid ${isDark ? 'rgba(214,138,60,0.22)' : 'rgba(180,110,20,0.18)'}`,
+            padding: '0.875rem 1rem',
+            display: 'flex', gap: '0.75rem', alignItems: 'flex-start',
+            marginBottom: '1.25rem',
+          }}>
+            <span style={{ fontSize: '1.4rem', lineHeight: 1, flexShrink: 0, marginTop: 2 }}>⏱</span>
+            <div>
+              <div style={{
+                fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 600,
+                fontSize: '0.9rem', lineHeight: 1.2,
+                color: isDark ? '#f0c070' : '#7a4a0a', marginBottom: '0.3rem',
+              }}>
+                « {motivMsg.title} »
+              </div>
+              <div style={{ fontSize: '0.68rem', lineHeight: 1.5, color: isDark ? 'rgba(240,192,112,0.75)' : 'rgba(100,60,10,0.75)' }}>
+                {motivMsg.body}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Liste des mouvements groupés */}
         {movementsQuery.isLoading && (

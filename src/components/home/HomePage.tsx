@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
-import { Timer, TrendingUp, ChevronLeft, ChevronRight, Sun, Moon, Clock, Calendar, Coffee } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Timer, TrendingUp, ChevronLeft, ChevronRight, Sun, Moon, Clock, Calendar, Coffee, Sunrise, Sunset } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { MonthCalendar } from '@/components/home/MonthCalendar'
 import { useUIStore } from '@/store/uiStore'
@@ -12,6 +13,7 @@ import { useAnnualSummaries } from '@/hooks/useAnnualSummaries'
 import { useAppointmentsMonth } from '@/hooks/useAppointments'
 import { useSettings } from '@/hooks/useSettings'
 import { monthKeyToLabel, toMonthKey, formatEuros, formatMinutes } from '@/utils/formatters'
+import { getMotivationalMessage, resolveCategory } from '@/utils/motivationalMessages'
 import type { CalendarDayEnriched } from '@/hooks/useCalendarMonth'
 import type { Appointment } from '@/types/firestore'
 
@@ -33,44 +35,66 @@ function getGreeting(): string {
   return 'Bonsoir'
 }
 
-function getContextMessage(params: {
-  balanceMinutes: number
-  workedCount: number
-  totalDays: number
-  overtimeMinutes: number
-  recuperationDays: number
-  firstName: string
-}): { title: string; body: string } {
-  const { balanceMinutes, workedCount, totalDays, overtimeMinutes, recuperationDays } = params
-  const remaining = totalDays - workedCount
+interface TimeOfDayInfo {
+  Icon: LucideIcon
+  gradient: [string, string]
+  textPrimary: string   // couleur du montant + titres
+  textMuted: string     // couleur des sous-titres
+  sparkColor: string    // couleur de la sparkline
+  label: string
+  decoOpacity: number
+}
 
-  if (balanceMinutes < -120) {
-    return {
-      title: 'Petit déficit à rattraper',
-      body: `Il te reste ${formatMinutes(Math.abs(balanceMinutes))} à récupérer sur le compteur. ${remaining > 0 ? `Et encore ${remaining} poste${remaining > 1 ? 's' : ''} ce mois.` : 'Courage !'}`,
-    }
+function getTimeOfDay(): TimeOfDayInfo {
+  const h = new Date().getHours()
+  // Nuit profonde
+  if (h < 6)  return {
+    Icon: Moon, label: 'Nuit',
+    gradient: ['#162038', '#0c1528'],
+    textPrimary: '#e8dfc8', textMuted: 'rgba(232,223,200,0.50)',
+    sparkColor: 'rgba(214,138,60,0.70)', decoOpacity: 0.10,
   }
-  if (balanceMinutes > 240) {
-    return {
-      title: 'Beau solde compteur',
-      body: `Tu as ${formatMinutes(balanceMinutes)} d'avance. ${recuperationDays > 0 ? `N'oublie pas tes ${recuperationDays} récup à poser.` : 'Profites-en !'}`,
-    }
+  // Aube — orange chaud levant
+  if (h < 9)  return {
+    Icon: Sunrise, label: 'Aube',
+    gradient: ['#6b3512', '#4a2208'],
+    textPrimary: '#fde8c8', textMuted: 'rgba(253,232,200,0.55)',
+    sparkColor: 'rgba(255,215,130,0.75)', decoOpacity: 0.15,
   }
-  if (overtimeMinutes > 60) {
-    return {
-      title: 'Heures supplémentaires',
-      body: `Tu as cumulé ${formatMinutes(overtimeMinutes)} de majorées ce mois. Elles seront valorisées sur ta prochaine fiche de paie.`,
-    }
+  // Matin — amber éclatant
+  if (h < 12) return {
+    Icon: Sun, label: 'Matin',
+    gradient: ['#7a3c10', '#522808'],
+    textPrimary: '#fde8c8', textMuted: 'rgba(253,232,200,0.55)',
+    sparkColor: 'rgba(255,215,130,0.75)', decoOpacity: 0.14,
   }
-  if (remaining === 0) {
-    return {
-      title: 'Mois bouclé',
-      body: 'Tous tes postes sont saisis. Tu peux consulter la synthèse mensuelle pour voir le détail de ton net.',
-    }
+  // Midi — doré lumineux
+  if (h < 14) return {
+    Icon: Sun, label: 'Midi',
+    gradient: ['#6e5010', '#4a3608'],
+    textPrimary: '#fdecc0', textMuted: 'rgba(253,236,192,0.55)',
+    sparkColor: 'rgba(255,220,110,0.70)', decoOpacity: 0.13,
   }
+  // Après-midi — ambré doré
+  if (h < 18) return {
+    Icon: Sun, label: 'Après-midi',
+    gradient: ['#624a10', '#403008'],
+    textPrimary: '#fde8c0', textMuted: 'rgba(253,232,192,0.55)',
+    sparkColor: 'rgba(255,215,110,0.70)', decoOpacity: 0.13,
+  }
+  // Soir — amber orangé couchant
+  if (h < 22) return {
+    Icon: Sunset, label: 'Soir',
+    gradient: ['#6e3010', '#4a1e08'],
+    textPrimary: '#fde8c8', textMuted: 'rgba(253,232,200,0.55)',
+    sparkColor: 'rgba(255,210,130,0.75)', decoOpacity: 0.15,
+  }
+  // Nuit tardive
   return {
-    title: 'Bon mois',
-    body: `Il te reste ${remaining} poste${remaining > 1 ? 's' : ''} à pointer pour finir le mois. Continue comme ça !`,
+    Icon: Moon, label: 'Nuit tardive',
+    gradient: ['#121830', '#0a1020'],
+    textPrimary: '#e8dfc8', textMuted: 'rgba(232,223,200,0.50)',
+    sparkColor: 'rgba(214,138,60,0.70)', decoOpacity: 0.10,
   }
 }
 
@@ -85,7 +109,7 @@ const SHIFT_LABELS: Record<string, string> = {
 
 // ─── Sparkline SVG ────────────────────────────────────────────────────────────
 
-function Sparkline({ values }: { values: number[] }) {
+function Sparkline({ values, sparkColor = 'rgba(214,138,60,0.7)' }: { values: number[]; sparkColor?: string }) {
   if (values.length < 2) return null
   const w = 180, h = 48
   const min = Math.min(...values)
@@ -101,15 +125,14 @@ function Sparkline({ values }: { values: number[] }) {
       <polyline
         points={pts.join(' ')}
         fill="none"
-        stroke="rgba(214,138,60,0.7)"
+        stroke={sparkColor}
         strokeWidth={2}
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      {/* Dernier point */}
       {(() => {
         const [x, y] = pts[pts.length - 1].split(',').map(Number)
-        return <circle cx={x} cy={y} r={3} fill="#d68a3c" />
+        return <circle cx={x} cy={y} r={3} fill={sparkColor} />
       })()}
     </svg>
   )
@@ -264,10 +287,11 @@ export function HomePage() {
     [dayMap, appointments, holidaySet, today]
   )
 
-  // ── Message contextuel ──
-  const contextMsg = useMemo(() => getContextMessage({
-    balanceMinutes, workedCount, totalDays, overtimeMinutes, recuperationDays, firstName,
-  }), [balanceMinutes, workedCount, totalDays, overtimeMinutes, recuperationDays, firstName])
+  // ── Message contextuel (pool rotatif) ──
+  const contextMsg = useMemo(() => {
+    const category = resolveCategory({ balanceMinutes, overtimeMinutes, workedCount, totalDays })
+    return getMotivationalMessage(category, 0)
+  }, [balanceMinutes, overtimeMinutes, workedCount, totalDays])
 
   // ── Décomposition salaire ──
   const hasResult = !salaryLoading && result
@@ -363,78 +387,98 @@ export function HomePage() {
 
       <div style={{ padding: '0 1.25rem', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-        {/* ── Hero ── */}
-        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
-          <div className="card" style={{
-            padding: '1.5rem 1.75rem',
-            background: isDark
-              ? 'linear-gradient(135deg, #1a2340 0%, #111827 100%)'
-              : 'linear-gradient(135deg, #2c3a5e 0%, #1a2340 100%)',
-            border: 'none', color: '#e8dcc8', position: 'relative', overflow: 'hidden',
-          }}>
-            {/* Déco lune/étoiles */}
-            <div style={{ position: 'absolute', right: 200, top: '50%', transform: 'translateY(-50%)', opacity: 0.12, fontSize: 120, lineHeight: 1, pointerEvents: 'none', userSelect: 'none' }}>
-              ◑
-            </div>
-            <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
-              {/* Left : net + sous-titre */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(232,220,200,0.55)', marginBottom: '0.5rem', fontFamily: 'JetBrains Mono, monospace' }}>
-                  Net après prélèvement
+        {/* ── Hero dynamique ── */}
+        {(() => {
+          const tod = getTimeOfDay()
+          const DecoIcon = tod.Icon
+          return (
+            <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
+              <div className="card" style={{
+                padding: '1.5rem 1.75rem',
+                background: `linear-gradient(135deg, ${tod.gradient[0]} 0%, ${tod.gradient[1]} 100%)`,
+                border: 'none', color: tod.textPrimary, position: 'relative', overflow: 'hidden',
+              }}>
+                {/* Déco icône heure du jour */}
+                <div style={{
+                  position: 'absolute', right: 190, top: '50%', transform: 'translateY(-50%)',
+                  opacity: tod.decoOpacity, pointerEvents: 'none',
+                }}>
+                  <DecoIcon size={130} strokeWidth={0.8} color={tod.textPrimary} />
                 </div>
-                <div style={{ fontFamily: 'Fraunces, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1, color: '#f0e6d0' }}>
-                  {salaryLoading ? '…' : result ? (
-                    <>
-                      {formatEuros(Math.floor(result.netAfterTax), { decimals: 0 })}
-                      <span style={{ fontSize: '0.45em', opacity: 0.7 }}>
-                        ,{String(Math.round((result.netAfterTax % 1) * 100)).padStart(2, '0')} €
-                      </span>
-                    </>
-                  ) : '—'}
-                </div>
-                <div style={{ fontSize: '0.68rem', color: 'rgba(232,220,200,0.55)', marginTop: '0.5rem', lineHeight: 1.5, fontFamily: 'JetBrains Mono, monospace' }}>
-                  Estimation actualisée à partir des postes saisis.
-                  {totalDays - workedCount > 0 && ` Il reste ${totalDays - workedCount} jour${totalDays - workedCount > 1 ? 's' : ''} à pointer pour finir ${monthLabel.split(' ')[0].toLowerCase()}.`}
-                </div>
-                {/* Badges */}
-                {hasResult && (
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.875rem', flexWrap: 'wrap' }}>
-                    {result.overtimePaidEuros > 0 && (
-                      <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(214,138,60,0.25)', color: '#f0c070', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
-                        +{formatEuros(result.overtimePaidEuros, { decimals: 0 })} majorations
-                      </span>
-                    )}
-                    {balanceMinutes > 0 && (
-                      <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(100,180,120,0.2)', color: '#90d4a0', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
-                        +{formatMinutes(balanceMinutes)} crédit
-                      </span>
-                    )}
-                    {balanceMinutes < 0 && (
-                      <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(251,69,101,0.2)', color: '#ff8090', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
-                        {formatMinutes(balanceMinutes)} débit
-                      </span>
-                    )}
-                    {workedCount > 0 && (
-                      <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(232,220,200,0.1)', color: 'rgba(232,220,200,0.6)', fontFamily: 'JetBrains Mono, monospace' }}>
-                        {workedCount} poste{workedCount > 1 ? 's' : ''} ce mois
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
 
-              {/* Right : sparkline 12 mois */}
-              {sparkValues.length > 1 && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', minWidth: 200 }}>
-                  <div style={{ fontSize: '0.55rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(232,220,200,0.4)', fontFamily: 'JetBrains Mono, monospace' }}>
-                    Net sur 12 mois
-                  </div>
-                  <Sparkline values={sparkValues} />
+                {/* Badge moment de la journée */}
+                <div style={{
+                  position: 'absolute', top: '1rem', right: '1.25rem',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  fontSize: '0.55rem', fontFamily: 'JetBrains Mono, monospace',
+                  letterSpacing: '0.12em', textTransform: 'uppercase',
+                  color: tod.textMuted,
+                }}>
+                  <DecoIcon size={10} strokeWidth={1.5} />
+                  {tod.label}
                 </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
+
+                <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
+                  {/* Left : net + sous-titre */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: tod.textMuted, marginBottom: '0.5rem', fontFamily: 'JetBrains Mono, monospace' }}>
+                      Net après prélèvement
+                    </div>
+                    <div style={{ fontFamily: 'Fraunces, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1, color: tod.textPrimary }}>
+                      {salaryLoading ? '…' : result ? (
+                        <>
+                          {formatEuros(Math.floor(result.netAfterTax), { decimals: 0 })}
+                          <span style={{ fontSize: '0.45em', opacity: 0.7 }}>
+                            ,{String(Math.round((result.netAfterTax % 1) * 100)).padStart(2, '0')} €
+                          </span>
+                        </>
+                      ) : '—'}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: tod.textMuted, marginTop: '0.5rem', lineHeight: 1.5, fontFamily: 'JetBrains Mono, monospace' }}>
+                      Estimation actualisée à partir des postes saisis.
+                      {totalDays - workedCount > 0 && ` Il reste ${totalDays - workedCount} jour${totalDays - workedCount > 1 ? 's' : ''} à pointer pour finir ${monthLabel.split(' ')[0].toLowerCase()}.`}
+                    </div>
+                    {/* Badges */}
+                    {hasResult && (
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.875rem', flexWrap: 'wrap' }}>
+                        {result.overtimePaidEuros > 0 && (
+                          <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(214,138,60,0.28)', color: '#f0c070', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
+                            +{formatEuros(result.overtimePaidEuros, { decimals: 0 })} majorations
+                          </span>
+                        )}
+                        {balanceMinutes > 0 && (
+                          <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(100,180,120,0.22)', color: '#90d4a0', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
+                            +{formatMinutes(balanceMinutes)} crédit
+                          </span>
+                        )}
+                        {balanceMinutes < 0 && (
+                          <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(251,69,101,0.22)', color: '#ff8090', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
+                            {formatMinutes(balanceMinutes)} débit
+                          </span>
+                        )}
+                        {workedCount > 0 && (
+                          <span style={{ fontSize: '0.6rem', padding: '3px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.08)', color: tod.textMuted, fontFamily: 'JetBrains Mono, monospace' }}>
+                            {workedCount} poste{workedCount > 1 ? 's' : ''} ce mois
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right : sparkline 12 mois */}
+                  {sparkValues.length > 1 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem', minWidth: 200 }}>
+                      <div style={{ fontSize: '0.55rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: tod.textMuted, fontFamily: 'JetBrains Mono, monospace' }}>
+                        Net sur 12 mois
+                      </div>
+                      <Sparkline values={sparkValues} sparkColor={tod.sparkColor} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )
+        })()}
 
         {/* ── 4 KPIs ── */}
         <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible">

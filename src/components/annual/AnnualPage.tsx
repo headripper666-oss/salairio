@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, CalendarRange, CheckCircle2 } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAnnualSummaries } from '@/hooks/useAnnualSummaries'
 import { formatEuros, formatMinutes, monthKeyToLabel } from '@/utils/formatters'
+import { getMotivationalMessage } from '@/utils/motivationalMessages'
+import { useUIStore } from '@/store/uiStore'
 import type { MonthlySummary } from '@/types/firestore'
 
 const MONTH_LABELS_SHORT = [
@@ -43,10 +45,20 @@ function computeAnnualTotals(summaries: Map<string, MonthlySummary>) {
 export function AnnualPage() {
   const [year, setYear] = useState(new Date().getFullYear())
   const { summaries, isLoading } = useAnnualSummaries(year)
+  const { isDark } = useUIStore()
+
+  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 900)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 900px)')
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   const months = buildMonthKeys(year)
   const today = currentMonthKey()
   const totals = computeAnnualTotals(summaries)
+  const motivMsg = getMotivationalMessage('general', 3)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -147,6 +159,34 @@ export function AnnualPage() {
         <p style={{ fontSize: '0.65rem', color: 'var(--ink-4)', marginTop: '0.875rem', textAlign: 'center' }}>
           Seuls les mois sauvegardés dans Synthèse apparaissent ici.
         </p>
+
+        {/* Encart motivant — PC uniquement */}
+        {isDesktop && (
+          <div style={{
+            borderRadius: 'var(--radius)',
+            background: isDark
+              ? 'linear-gradient(145deg, #2a1f0e 0%, #1e1608 100%)'
+              : 'linear-gradient(145deg, #f5ddb0 0%, #edd090 100%)',
+            border: `1px solid ${isDark ? 'rgba(214,138,60,0.22)' : 'rgba(180,110,20,0.18)'}`,
+            padding: '0.875rem 1rem',
+            marginTop: '0.875rem',
+            display: 'flex', gap: '0.75rem', alignItems: 'flex-start',
+          }}>
+            <span style={{ fontSize: '1.4rem', lineHeight: 1, flexShrink: 0, marginTop: 2 }}>📊</span>
+            <div>
+              <div style={{
+                fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 600,
+                fontSize: '0.9rem', lineHeight: 1.2,
+                color: isDark ? '#f0c070' : '#7a4a0a', marginBottom: '0.3rem',
+              }}>
+                « {motivMsg.title} »
+              </div>
+              <div style={{ fontSize: '0.68rem', lineHeight: 1.5, color: isDark ? 'rgba(240,192,112,0.75)' : 'rgba(100,60,10,0.75)' }}>
+                {motivMsg.body}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

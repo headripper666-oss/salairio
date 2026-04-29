@@ -7,6 +7,8 @@ import { CardSkeleton } from '@/components/shared/LoadingSkeleton'
 import { useSalaryEngine } from '@/hooks/useSalaryEngine'
 import { useMonthlySummary } from '@/hooks/useMonthlySummary'
 import { useAnnualSummaries } from '@/hooks/useAnnualSummaries'
+import { useUIStore } from '@/store/uiStore'
+import { getMotivationalMessage } from '@/utils/motivationalMessages'
 
 function monthKeyNow(): string {
   const now = new Date()
@@ -106,6 +108,8 @@ export function MonthlySummaryPage() {
   const [monthKey, setMonthKey] = useState(monthKeyNow)
   const { result, isLoading } = useSalaryEngine(monthKey)
   const { saveSummary, isSaving } = useMonthlySummary(monthKey)
+  const { isDark } = useUIStore()
+  const motivMsg = getMotivationalMessage('general', 1)
 
   const year = parseInt(monthKey.split('-')[0])
   const { summaries } = useAnnualSummaries(year)
@@ -330,21 +334,27 @@ export function MonthlySummaryPage() {
                 </div>
               </div>
 
-              {/* Conseil cosy */}
+              {/* Encart motivant */}
               <div style={{
-                background: 'linear-gradient(135deg, rgba(241,201,135,.10) 0%, rgba(214,138,60,.06) 100%)',
                 borderRadius: 18,
+                background: isDark
+                  ? 'linear-gradient(145deg, #2a1f0e 0%, #1e1608 100%)'
+                  : 'linear-gradient(145deg, #f5ddb0 0%, #edd090 100%)',
+                border: `1px solid ${isDark ? 'rgba(214,138,60,0.22)' : 'rgba(180,110,20,0.18)'}`,
                 padding: '18px 20px',
-                border: '1px solid rgba(214,138,60,.18)',
-                display: 'flex', gap: 16, alignItems: 'center',
+                display: 'flex', gap: 16, alignItems: 'flex-start',
               }}>
                 <TeacupIllu />
                 <div>
-                  <div style={{ fontFamily: "'Caveat', cursive", fontSize: 20, color: '#3d2a0a', lineHeight: 1.1, marginBottom: 4, fontWeight: 700 }}>
-                    « beau mois »
+                  <div style={{
+                    fontFamily: 'Fraunces, serif', fontStyle: 'italic', fontWeight: 600,
+                    fontSize: '1rem', lineHeight: 1.2,
+                    color: isDark ? '#f0c070' : '#7a4a0a', marginBottom: 6,
+                  }}>
+                    « {motivMsg.title} »
                   </div>
-                  <div style={{ fontSize: 13, color: '#5a3a14', lineHeight: 1.5 }}>
-                    Retrouve l'évolution dans <strong>Tableau annuel</strong>.
+                  <div style={{ fontSize: 13, color: isDark ? 'rgba(240,192,112,0.75)' : 'rgba(100,60,10,0.75)', lineHeight: 1.5 }}>
+                    {motivMsg.body}
                   </div>
                 </div>
               </div>

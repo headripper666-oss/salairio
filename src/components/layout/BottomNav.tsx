@@ -1,12 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { Home, TrendingUp, Timer, CalendarRange, Settings2 } from 'lucide-react'
+import { Home, TrendingUp, Timer, CalendarDays, Settings2 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { path: '/home',     Icon: Home,          label: 'Accueil'  },
-  { path: '/summary',  Icon: TrendingUp,    label: 'Synthèse' },
-  { path: '/counter',  Icon: Timer,         label: 'Compteur' },
-  { path: '/annual',   Icon: CalendarRange, label: 'Annuel'   },
-  { path: '/settings', Icon: Settings2,     label: 'Réglages' },
+  { path: '/home',         Icon: Home,          label: 'Accueil'  },
+  { path: '/summary',      Icon: TrendingUp,    label: 'Synthèse' },
+  { path: '/counter',      Icon: Timer,         label: 'Compteur' },
+  { path: '/appointments', Icon: CalendarDays,  label: 'RDV'      },
+  { path: '/settings',     Icon: Settings2,     label: 'Réglages' },
 ]
 
 export function BottomNav() {

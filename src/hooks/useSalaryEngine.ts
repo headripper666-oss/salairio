@@ -5,6 +5,7 @@ import { useFixedExtras } from '@/hooks/useFixedExtras'
 import { useOneOffBonuses } from '@/hooks/useOneOffBonuses'
 import { useTaxRates } from '@/hooks/useTaxRates'
 import { getCounterMovements } from '@/services/firestore/counterMovements'
+import { getMonthCalendarDays } from '@/services/firestore/calendarDays'
 import { computeMonthlySalary } from '@/engine/salary'
 import { getMonthMovements } from '@/engine/counter'
 import type { SalaryResult } from '@/engine/salary'
@@ -30,13 +31,25 @@ export function useSalaryEngine(monthKey: string): { result: SalaryResult | null
     staleTime: 1000 * 30,
   })
 
+  const calendarDaysQuery = useQuery({
+    queryKey: ['calendarMonth', uid, monthKey],
+    queryFn: () => getMonthCalendarDays(uid!, monthKey),
+    enabled: !!uid,
+    staleTime: 2 * 60 * 1000,
+  })
+
   const isLoading =
-    settingsLoading || extrasLoading || bonusesLoading || ratesLoading || movementsQuery.isLoading
+    settingsLoading || extrasLoading || bonusesLoading || ratesLoading ||
+    movementsQuery.isLoading || calendarDaysQuery.isLoading
 
   if (isLoading || !settings) return { result: null, isLoading }
 
   const monthMovements = getMonthMovements(movementsQuery.data ?? [], monthKey)
   const pasRate = getActivePasRate(taxRates, monthKey)
+
+  const mealPrice = settings.mealPriceEuros ?? 0
+  const mealCount = (calendarDaysQuery.data ?? []).reduce((acc, d) => acc + (d.mealCount ?? 0), 0)
+  const mealCostTotal = mealCount * mealPrice
 
   const result = computeMonthlySalary({
     settings,
@@ -45,6 +58,8 @@ export function useSalaryEngine(monthKey: string): { result: SalaryResult | null
     counterMovements: monthMovements,
     pasRate,
     monthKey,
+    mealCostTotal,
+    mealCount,
   })
 
   return { result, isLoading: false }

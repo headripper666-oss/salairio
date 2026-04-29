@@ -1,7 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCalendarMonth } from '@/hooks/useCalendarMonth'
+import { useAppointmentsMonth } from '@/hooks/useAppointments'
+import { usePillReminders } from '@/hooks/usePillReminders'
+import { useAppointmentReminders } from '@/hooks/useAppointmentReminders'
 import { DayDrawer } from '@/components/day/DayDrawer'
-import { STATUS_STYLES } from '@/utils/colorUtils'
+import { STATUS_STYLES, APPT_BLOCK_COLORS } from '@/utils/colorUtils'
 import { getDaysInMonth, getFirstDayOfMonth, toDateStr, isToday } from '@/utils/dateUtils'
 
 const DAYS_HEADER = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim']
@@ -11,9 +14,32 @@ interface MonthCalendarProps {
   month: number
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 640)
+  useEffect(() => {
+    const h = () => setMobile(window.innerWidth < 640)
+    window.addEventListener('resize', h)
+    return () => window.removeEventListener('resize', h)
+  }, [])
+  return mobile
+}
+
 export function MonthCalendar({ year, month }: MonthCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const isMobile = useIsMobile()
   const { dayMap, holidaySet, isLoading } = useCalendarMonth(year, month)
+  const { appointments } = useAppointmentsMonth(year, month)
+
+  usePillReminders(dayMap)
+  useAppointmentReminders(appointments)
+
+  // Map date → RDV du jour (trié par heure)
+  const apptByDate = new Map<string, typeof appointments>()
+  for (const a of appointments) {
+    const list = apptByDate.get(a.date) ?? []
+    list.push(a)
+    apptByDate.set(a.date, list)
+  }
 
   const daysInMonth = getDaysInMonth(year, month)
   const firstDow = getFirstDayOfMonth(year, month) // 0=Dim
@@ -67,9 +93,9 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
           )}
         </div>
 
-        <div style={{ padding: '12px' }}>
+        <div style={{ padding: isMobile ? '6px' : '12px' }}>
           {/* En-têtes jours */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: isMobile ? '3px' : '6px' }}>
             {DAYS_HEADER.map((d, i) => (
               <div key={i} style={{
                 textAlign: 'center',
@@ -87,9 +113,9 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
           </div>
 
           {/* Grille */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: isMobile ? '2px' : '4px' }}>
             {cells.map((cell, i) => {
-              if (!cell) return <div key={i} style={{ minHeight: 52 }} />
+              if (!cell) return <div key={i} style={{ minHeight: isMobile ? 52 : 80 }} />
 
               const { day, date } = cell
               const enriched = dayMap.get(date)
@@ -99,6 +125,7 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
               const isWkd = (i % 7) >= 5
               const todayCell = isToday(date)
               const hasStatus = status !== 'vide'
+              const dayAppts = (apptByDate.get(date) ?? []).slice().sort((a, b) => a.time.localeCompare(b.time))
 
               const bgColor = isHoliday && !hasStatus
                 ? 'rgba(214,138,60,0.14)'
@@ -120,16 +147,16 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                   type="button"
                   onClick={() => setSelectedDate(date)}
                   style={{
-                    minHeight: 52,
+                    minHeight: isMobile ? 52 : 80,
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     alignItems: 'stretch',
-                    borderRadius: 12,
+                    borderRadius: isMobile ? 8 : 12,
                     border: borderStyle,
                     background: bgColor,
                     cursor: 'pointer',
-                    padding: '5px 6px',
+                    padding: isMobile ? '4px 3px' : '5px 6px',
                     position: 'relative',
                     transition: 'transform 0.12s ease, box-shadow 0.12s ease',
                     outline: 'none',
@@ -148,7 +175,7 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                     <span style={{
                       fontFamily: 'Fraunces, serif',
                       fontWeight: 600,
-                      fontSize: '0.85rem',
+                      fontSize: isMobile ? '0.7rem' : '0.85rem',
                       lineHeight: 1,
                       color: todayCell
                         ? 'var(--amber)'
@@ -162,11 +189,11 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                     {/* Badge statut */}
                     {hasStatus && (
                       <span style={{
-                        fontSize: '0.52rem',
+                        fontSize: isMobile ? '0.44rem' : '0.52rem',
                         fontFamily: 'JetBrains Mono, monospace',
                         fontWeight: 600,
                         letterSpacing: '0.02em',
-                        padding: '1px 4px',
+                        padding: isMobile ? '1px 3px' : '1px 4px',
                         borderRadius: 999,
                         background: style.tagBg,
                         color: style.tagColor,
@@ -180,10 +207,10 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                     {/* Badge férié (sans statut) */}
                     {isHoliday && !hasStatus && (
                       <span style={{
-                        fontSize: '0.52rem',
+                        fontSize: isMobile ? '0.44rem' : '0.52rem',
                         fontFamily: 'JetBrains Mono, monospace',
                         fontWeight: 600,
-                        padding: '1px 4px',
+                        padding: isMobile ? '1px 3px' : '1px 4px',
                         borderRadius: 999,
                         background: 'var(--amber)',
                         color: '#2a1a05',
@@ -195,14 +222,47 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
                     )}
                   </div>
 
-                  {/* Point indicateur (weekend ou holiday sans statut) */}
-                  {!hasStatus && (isWkd || isHoliday) && (
-                    <div style={{
-                      width: 4, height: 4, borderRadius: '50%',
-                      background: isHoliday ? 'rgba(214,138,60,0.5)' : 'var(--rule)',
-                      alignSelf: 'flex-end',
-                    }} />
-                  )}
+                  {/* Bas de cellule : point weekend/férié + blocs RDV */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 3 }}>
+                    {!hasStatus && (isWkd || isHoliday) && dayAppts.length === 0 && (
+                      <div style={{
+                        width: 4, height: 4, borderRadius: '50%',
+                        background: isHoliday ? 'rgba(214,138,60,0.5)' : 'var(--rule)',
+                        alignSelf: 'flex-end',
+                      }} />
+                    )}
+                    {dayAppts.slice(0, isMobile ? 1 : 2).map(appt => {
+                      const apptColor = APPT_BLOCK_COLORS[status]
+                      return (
+                        <div key={appt.id} style={{
+                          fontSize: isMobile ? '0.54rem' : '0.62rem',
+                          fontFamily: 'JetBrains Mono, monospace',
+                          fontWeight: 600,
+                          lineHeight: 1.4,
+                          padding: isMobile ? '1px 3px' : '2px 5px',
+                          borderRadius: isMobile ? 3 : 4,
+                          background: apptColor.bg,
+                          color: apptColor.text,
+                          border: `1px solid ${apptColor.border}`,
+                          overflow: 'hidden',
+                          whiteSpace: 'nowrap',
+                          textOverflow: 'ellipsis',
+                        }}>
+                          {isMobile ? appt.time : `${appt.time} ${appt.title}`}
+                        </div>
+                      )
+                    })}
+                    {dayAppts.length > (isMobile ? 1 : 2) && (
+                      <div style={{
+                        fontSize: '0.45rem',
+                        color: APPT_BLOCK_COLORS[status].text,
+                        fontFamily: 'JetBrains Mono, monospace',
+                        textAlign: 'right',
+                      }}>
+                        +{dayAppts.length - (isMobile ? 1 : 2)}
+                      </div>
+                    )}
+                  </div>
                 </button>
               )
             })}
@@ -238,6 +298,8 @@ export function MonthCalendar({ year, month }: MonthCalendarProps) {
 
       <DayDrawer
         date={selectedDate}
+        year={year}
+        month={month}
         existingDay={selectedEnriched}
         isFerie={selectedIsFerie}
         onClose={() => setSelectedDate(null)}

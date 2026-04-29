@@ -92,6 +92,14 @@ export function SalaryBreakdownCard({ result }: Props) {
       {result.mutuelleEmployee > 0 && (
         <Row label="Mutuelle (part salariale)" value={`− ${fmt(result.mutuelleEmployee)}`} color="#c87067" small />
       )}
+      {result.mealCostTotal > 0 && (
+        <Row
+          label={`Repas (${result.mealCount} repas)`}
+          value={`− ${fmt(result.mealCostTotal)}`}
+          color="#c87067"
+          small
+        />
+      )}
 
       <div style={S.divider} />
       <Row label="Net imposable" value={fmt(result.netImposable)} />

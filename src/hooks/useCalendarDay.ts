@@ -10,9 +10,12 @@ import type { CalendarDay, DayStatus } from '@/types/firestore'
 export interface SaveDayInput {
   status: DayStatus
   overtimeMinutes: number
+  extraHoursMinutes: number  // pour jour_supp : durée brute (défaut 420 = 7h)
+  breakMinutes: number       // pour jour_supp : pause à déduire (défaut 20)
   note: string
   isFerie: boolean
   shiftKey?: string
+  mealCount: number          // 0 | 1 | 2 repas pris au boulot
 }
 
 export function useCalendarDay() {
@@ -28,9 +31,12 @@ export function useCalendarDay() {
       await setCalendarDay(uid, date, {
         status: input.status,
         overtimeMinutes: input.overtimeMinutes,
+        extraHoursMinutes: input.extraHoursMinutes,
+        breakMinutes: input.breakMinutes,
         isFerie: input.isFerie,
         note: input.note,
         shiftKey: input.shiftKey,
+        mealCount: input.mealCount,
       })
 
       await deleteMovementsBySource(uid, date)
@@ -48,7 +54,7 @@ export function useCalendarDay() {
           note: '',
         })
       } else if (input.status === 'jour_supp') {
-        const duration = getShiftDurationMinutes(settings, input.shiftKey)
+        const duration = Math.max(0, input.extraHoursMinutes - input.breakMinutes)
         await addCounterMovement(uid, {
           date,
           monthKey,
@@ -84,9 +90,12 @@ export function useCalendarDay() {
           date,
           status: input.status,
           overtimeMinutes: input.overtimeMinutes,
+          extraHoursMinutes: input.extraHoursMinutes,
+          breakMinutes: input.breakMinutes,
           isFerie: input.isFerie,
           note: input.note,
           shiftKey: input.shiftKey,
+          mealCount: input.mealCount,
           updatedAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 } as any,
         }
         const idx = old.findIndex(d => d.date === date)
