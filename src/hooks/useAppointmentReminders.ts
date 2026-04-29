@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSettings } from '@/hooks/useSettings'
 import { scheduleNotification, cancelNotificationsWithPrefix, isNotificationGranted } from '@/hooks/useNotifications'
 import type { Appointment } from '@/types/firestore'
@@ -11,17 +11,19 @@ function formatDelay(minutesBefore: number): string {
 
 export function useAppointmentReminders(appointments: Appointment[]) {
   const { settings } = useSettings()
+  const lastHash = useRef<string>('')
 
   useEffect(() => {
     if (!isNotificationGranted()) return
 
     const rules = settings?.apptReminderRules ?? []
+    const hash = JSON.stringify(appointments) + JSON.stringify(rules)
+
+    if (hash === lastHash.current) return
+    lastHash.current = hash
+
     const now = Date.now()
-
-    // Annule tous les anciens rappels RDV avant de reprogrammer
-    cancelNotificationsWithPrefix('appt-')
-
-    if (rules.length === 0) return
+    const toSchedule: { id: string; title: string; body: string; at: Date }[] = []
 
     for (const appt of appointments) {
       const [h, m] = appt.time.split(':').map(Number)
@@ -31,14 +33,19 @@ export function useAppointmentReminders(appointments: Appointment[]) {
       rules.forEach((rule, idx) => {
         const at = new Date(apptDate.getTime() - rule.minutesBefore * 60 * 1000)
         if (at.getTime() <= now) return
-
-        scheduleNotification(
-          `appt-${appt.id}-${idx}`,
-          `📅 ${appt.title}`,
-          `RDV ${formatDelay(rule.minutesBefore)} à ${appt.time}`,
+        toSchedule.push({
+          id: `appt-${appt.id}-${idx}`,
+          title: `📅 ${appt.title}`,
+          body: `RDV ${formatDelay(rule.minutesBefore)} à ${appt.time}`,
           at,
-        )
+        })
       })
     }
+
+    cancelNotificationsWithPrefix('appt-').then(() => {
+      for (const { id, title, body, at } of toSchedule) {
+        scheduleNotification(id, title, body, at)
+      }
+    })
   }, [appointments, settings?.apptReminderRules])
 }

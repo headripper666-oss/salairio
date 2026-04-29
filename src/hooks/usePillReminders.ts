@@ -1,13 +1,20 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSettings } from '@/hooks/useSettings'
 import { scheduleNotification, cancelNotificationsWithPrefix, isNotificationGranted } from '@/hooks/useNotifications'
 import type { CalendarDayEnriched } from '@/hooks/useCalendarMonth'
 
 const PILL_PREFIX = 'pill-'
 
-// Programmation des rappels pilule pour le mois donné
+function computeHash(dayMap: Map<string, CalendarDayEnriched>, times: Record<string, string>): string {
+  const entries = [...dayMap.entries()]
+    .map(([date, day]) => `${date}:${day.status}:${day.shiftKey ?? ''}`)
+    .join('|')
+  return entries + JSON.stringify(times)
+}
+
 export function usePillReminders(dayMap: Map<string, CalendarDayEnriched>) {
   const { settings } = useSettings()
+  const lastHash = useRef<string>('')
 
   useEffect(() => {
     if (!settings?.pillReminderEnabled) return
@@ -15,9 +22,14 @@ export function usePillReminders(dayMap: Map<string, CalendarDayEnriched>) {
     if (!settings.pillReminderTimes) return
 
     const times = settings.pillReminderTimes
-    const now = Date.now()
+    const hash = computeHash(dayMap, times)
 
-    cancelNotificationsWithPrefix(PILL_PREFIX)
+    // Ne refait le travail que si les données ont réellement changé
+    if (hash === lastHash.current) return
+    lastHash.current = hash
+
+    const now = Date.now()
+    const toSchedule: { id: string; at: Date }[] = []
 
     for (const [date, day] of dayMap.entries()) {
       const workedStatuses = ['matin', 'apres_midi', 'jour_supp']
@@ -37,13 +49,14 @@ export function usePillReminders(dayMap: Map<string, CalendarDayEnriched>) {
       at.setHours(h, m, 0, 0)
 
       if (at.getTime() <= now) continue
-
-      scheduleNotification(
-        `${PILL_PREFIX}${date}`,
-        '💊 Rappel pilule',
-        `N'oublie pas de prendre ta pilule !`,
-        at,
-      )
+      toSchedule.push({ id: `${PILL_PREFIX}${date}`, at })
     }
+
+    // Cancel puis reschedule en une seule séquence atomique
+    cancelNotificationsWithPrefix(PILL_PREFIX).then(() => {
+      for (const { id, at } of toSchedule) {
+        scheduleNotification(id, '💊 Rappel pilule', `N'oublie pas de prendre ta pilule !`, at)
+      }
+    })
   }, [dayMap, settings])
 }
