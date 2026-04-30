@@ -29,16 +29,22 @@ function computeAnnualTotals(summaries: Map<string, MonthlySummary>) {
   let overtimeMin = 0
   let creditMin = 0
   let count = 0
+  let daysMatin = 0
+  let daysAM = 0
+  let daysSupp = 0
 
   summaries.forEach(s => {
-    netTotal   += s.netAfterTax
-    grossTotal += s.grossTotal
+    netTotal    += s.realNetAfterTax  ?? s.netAfterTax
+    grossTotal  += s.realGrossTotal   ?? s.grossTotal
     overtimeMin += s.overtimePaidMinutes
     creditMin   += s.counterCreditMinutes
+    daysMatin   += s.workedDays?.matin      ?? 0
+    daysAM      += s.workedDays?.apres_midi ?? 0
+    daysSupp    += s.workedDays?.jour_supp  ?? 0
     count++
   })
 
-  return { netTotal, grossTotal, overtimeMin, creditMin, count }
+  return { netTotal, grossTotal, overtimeMin, creditMin, count, daysMatin, daysAM, daysSupp }
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
@@ -119,7 +125,7 @@ export function AnnualPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--rule)' }}>
-                  {['Mois', 'Net', 'Brut', 'Supp.', 'Compteur', ''].map((h, i) => (
+                  {['Mois', 'Net', 'Brut', 'Matin', 'AM', 'Supp.j', 'Total', 'H.supp', 'Cpt', ''].map((h, i) => (
                     <th
                       key={i}
                       style={{
@@ -239,15 +245,47 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
 
       {/* Net */}
       <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>
-        {hasSummary ? formatEuros(summary.netAfterTax, { decimals: 0 }) : '—'}
+        {hasSummary
+          ? <span title={summary.realNetAfterTax != null ? 'Valeur réelle saisie' : 'Estimation'}>
+              {formatEuros(summary.realNetAfterTax ?? summary.netAfterTax, { decimals: 0 })}
+              {summary.realNetAfterTax != null && <span style={{ color: '#6b8a5a', marginLeft: 2, fontSize: '0.6rem' }}>✓</span>}
+            </span>
+          : '—'
+        }
       </td>
 
       {/* Brut */}
       <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", color: hasSummary ? 'var(--ink-3)' : 'var(--ink-4)', fontSize: '0.75rem' }}>
-        {hasSummary ? formatEuros(summary.grossTotal, { decimals: 0 }) : '—'}
+        {hasSummary
+          ? <span title={summary.realGrossTotal != null ? 'Valeur réelle saisie' : 'Estimation'}>
+              {formatEuros(summary.realGrossTotal ?? summary.grossTotal, { decimals: 0 })}
+              {summary.realGrossTotal != null && <span style={{ color: '#6b8a5a', marginLeft: 2, fontSize: '0.6rem' }}>✓</span>}
+            </span>
+          : '—'
+        }
       </td>
 
-      {/* Supp. payées */}
+      {/* Matin */}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasSummary && (summary.workedDays?.matin ?? 0) > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
+        {hasSummary ? (summary.workedDays?.matin ?? '—') : '—'}
+      </td>
+
+      {/* AM */}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasSummary && (summary.workedDays?.apres_midi ?? 0) > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
+        {hasSummary ? (summary.workedDays?.apres_midi ?? '—') : '—'}
+      </td>
+
+      {/* Jours supp */}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasSummary && (summary.workedDays?.jour_supp ?? 0) > 0 ? '#8aaee0' : 'var(--ink-4)' }}>
+        {hasSummary ? (summary.workedDays?.jour_supp ?? '—') : '—'}
+      </td>
+
+      {/* Total jours */}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', fontWeight: 600, color: hasSummary && (summary.workedDays?.total ?? 0) > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
+        {hasSummary ? (summary.workedDays?.total ?? '—') : '—'}
+      </td>
+
+      {/* H. supp payées */}
       <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", color: hasSummary && summary.overtimePaidMinutes > 0 ? '#8aaee0' : 'var(--ink-4)', fontSize: '0.75rem' }}>
         {hasSummary
           ? summary.overtimePaidMinutes > 0
@@ -281,7 +319,7 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
 function SkeletonRow() {
   return (
     <tr style={{ borderBottom: '1px solid rgba(241,231,210,0.04)' }}>
-      {[80, 64, 56, 40, 40, 16].map((w, i) => (
+      {[80, 64, 56, 28, 28, 28, 32, 40, 40, 16].map((w, i) => (
         <td key={i} style={{ padding: '0.7rem 0.875rem', textAlign: i === 0 ? 'left' : 'right' }}>
           <div className="skeleton" style={{ width: w, height: 12, display: 'inline-block' }} />
         </td>

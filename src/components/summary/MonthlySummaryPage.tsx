@@ -107,7 +107,9 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 export function MonthlySummaryPage() {
   const [monthKey, setMonthKey] = useState(monthKeyNow)
   const { result, isLoading } = useSalaryEngine(monthKey)
-  const { saveSummary, isSaving } = useMonthlySummary(monthKey)
+  const { saveSummary, isSaving, savedSummary } = useMonthlySummary(monthKey)
+  const [realGross, setRealGross] = useState('')
+  const [realNet,   setRealNet]   = useState('')
   const { isDark } = useUIStore()
   const motivMsg = getMotivationalMessage('general', 1)
 
@@ -118,10 +120,16 @@ export function MonthlySummaryPage() {
   const monthLabel = format(displayDate, 'MMMM yyyy', { locale: fr })
 
   function prev() {
-    setMonthKey(k => format(subMonths(parseISO(`${k}-01`), 1), 'yyyy-MM'))
+    const mk = format(subMonths(parseISO(`${monthKey}-01`), 1), 'yyyy-MM')
+    setMonthKey(mk)
+    setRealGross('')
+    setRealNet('')
   }
   function next() {
-    setMonthKey(k => format(addMonths(parseISO(`${k}-01`), 1), 'yyyy-MM'))
+    const mk = format(addMonths(parseISO(`${monthKey}-01`), 1), 'yyyy-MM')
+    setMonthKey(mk)
+    setRealGross('')
+    setRealNet('')
   }
 
   const barMonths = Array.from({ length: 12 }, (_, i) => {
@@ -227,10 +235,57 @@ export function MonthlySummaryPage() {
                 </span>
               </div>
 
+              {/* Champs valeurs réelles */}
+              <div style={{ marginTop: 18, padding: '12px 14px', borderRadius: 10, background: 'rgba(29,26,23,0.05)', border: '1px dashed rgba(29,26,23,0.18)' }}>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8a8278', marginBottom: 10 }}>
+                  Valeurs réelles (fiche de paie) — optionnel
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { label: 'Brut total réel', val: realGross, set: setRealGross, saved: savedSummary?.realGrossTotal },
+                    { label: 'Net après PAS réel', val: realNet, set: setRealNet, saved: savedSummary?.realNetAfterTax },
+                  ].map(({ label, val, set, saved }) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: '#4a443d', flex: 1 }}>{label}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {saved != null && val === '' && (
+                          <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#6b8a5a' }}>
+                            {saved.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                          </span>
+                        )}
+                        <input
+                          type="number"
+                          value={val}
+                          onChange={e => set(e.target.value)}
+                          placeholder={saved != null ? 'modifier…' : 'ex: 3094.00'}
+                          step="0.01"
+                          min="0"
+                          style={{
+                            width: 100, padding: '4px 6px', borderRadius: 6,
+                            border: '1px solid rgba(29,26,23,0.22)',
+                            background: 'rgba(255,255,255,0.6)',
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                            color: '#1d1a17', textAlign: 'right',
+                          }}
+                        />
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: '#8a8278' }}>€</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: '#aaa090', marginTop: 8 }}>
+                  Si vide → l'estimation calculée est utilisée dans le tableau annuel
+                </div>
+              </div>
+
               {/* Bouton sauvegarder */}
               <div style={{ marginTop: 22, display: 'flex', justifyContent: 'center' }}>
                 <button
-                  onClick={() => saveSummary()}
+                  onClick={() => {
+                    const rg = realGross !== '' ? parseFloat(realGross) : undefined
+                    const rn = realNet   !== '' ? parseFloat(realNet)   : undefined
+                    saveSummary({ realGrossTotal: rg, realNetAfterTax: rn })
+                  }}
                   disabled={isSaving}
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 8,

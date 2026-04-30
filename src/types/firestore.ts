@@ -108,6 +108,13 @@ export interface CounterMovement {
 }
 
 // ─── users/{uid}/monthlySummaries/{yyyy-mm} ───────────────────────────────────
+export interface WorkedDays {
+  matin: number
+  apres_midi: number
+  jour_supp: number
+  total: number
+}
+
 export interface MonthlySummary {
   monthKey: string
   grossBase: number
@@ -122,6 +129,11 @@ export interface MonthlySummary {
   pasRate: number
   pasAmount: number
   netAfterTax: number
+  // Valeurs réelles saisies manuellement (remplacent les estimations dans les agrégats)
+  realGrossTotal?: number
+  realNetAfterTax?: number
+  // Jours travaillés comptés depuis le calendrier
+  workedDays?: WorkedDays
   counterCreditMinutes: number
   counterDebitMinutes: number
   counterBalanceEndOfMonth: number
