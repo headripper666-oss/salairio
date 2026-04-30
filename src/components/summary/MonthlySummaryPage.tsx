@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { format, addMonths, subMonths, parseISO } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -120,13 +121,17 @@ export function MonthlySummaryPage() {
   const displayDate = parseISO(`${monthKey}-01`)
   const monthLabel = format(displayDate, 'MMMM yyyy', { locale: fr })
 
+  const [swipeDir, setSwipeDir] = useState<-1 | 0 | 1>(0)
+
   function prev() {
+    setSwipeDir(1)
     const mk = format(subMonths(parseISO(`${monthKey}-01`), 1), 'yyyy-MM')
     setMonthKey(mk)
     setRealGross('')
     setRealNet('')
   }
   function next() {
+    setSwipeDir(-1)
     const mk = format(addMonths(parseISO(`${monthKey}-01`), 1), 'yyyy-MM')
     setMonthKey(mk)
     setRealGross('')
@@ -162,7 +167,16 @@ export function MonthlySummaryPage() {
 
         {isLoading && <div className="px-4"><CardSkeleton /></div>}
 
+        <AnimatePresence mode="popLayout" initial={false} custom={swipeDir}>
         {!isLoading && result && (
+          <motion.div
+            key={monthKey}
+            custom={swipeDir}
+            initial={d => ({ x: d === 0 ? 0 : d < 0 ? '60%' : '-60%', opacity: 0 })}
+            animate={{ x: 0, opacity: 1 }}
+            exit={d => ({ x: d < 0 ? '-60%' : '60%', opacity: 0 })}
+            transition={{ type: 'spring', stiffness: 320, damping: 34, mass: 0.8 }}
+          >
           <div className="px-4 space-y-4 md:space-y-0 md:grid md:gap-5 md:items-start"
             style={{ gridTemplateColumns: 'minmax(340px,460px) 1fr' }}>
 
@@ -425,7 +439,9 @@ export function MonthlySummaryPage() {
 
             </div>
           </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         {!isLoading && !result && (
           <div style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '3rem 1rem' }}>

@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import {
   DollarSign, Clock, Zap, TrendingUp, CalendarDays, Bell,
   ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2, Check, AlertTriangle,
+  Smartphone, ExternalLink,
 } from 'lucide-react'
 import { requestNotificationPermission, scheduleNotification, isNotificationGranted, getScheduledIds } from '@/hooks/useNotifications'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -867,8 +868,6 @@ function RemindersSection() {
   const [permState, setPermState] = useState<NotificationPermission>(
     'Notification' in window ? Notification.permission : 'denied',
   )
-  const [gotifyToken, setGotifyToken] = useState(() => settings?.gotifyToken ?? '')
-
   const shifts = settings?.shifts ?? []
   const times = settings?.pillReminderTimes ?? { offDay: '09:00' }
   const enabled = settings?.pillReminderEnabled ?? false
@@ -906,27 +905,6 @@ function RemindersSection() {
   return (
     <AccordionSection icon={<Bell size={16} />} title="Rappels" saved={visible}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-
-        {/* ── Token Gotify ── */}
-        <div>
-          <p className="settings-section-title" style={{ padding: 0, marginBottom: 4 }}>Token Gotify personnel</p>
-          <span className="settings-hint" style={{ display: 'block', marginBottom: 8 }}>
-            Créer une application dans l'interface Gotify et coller son token ici. Chaque utilisateur doit avoir son propre token pour recevoir uniquement ses notifications.
-          </span>
-          <div className="settings-input-wrap">
-            <input
-              type="text"
-              value={gotifyToken}
-              onChange={e => setGotifyToken(e.target.value)}
-              onBlur={() => updateSettings({ gotifyToken: gotifyToken.trim() }, { onSuccess: show })}
-              className="settings-input"
-              placeholder="ex: ApxKtfigDwA0dWa"
-              style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem' }}
-            />
-          </div>
-        </div>
-
-        <div style={{ height: 1, background: 'var(--rule)' }} />
 
         {/* ── Rappels pilule ── */}
         <div>
@@ -1105,6 +1083,79 @@ function RemindersSection() {
         </div>
 
       </div>
+    </AccordionSection>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
+// SECTION 7 — Gotify (notifications push)
+// ═══════════════════════════════════════════════════════════
+
+const GOTIFY_URL = 'https://renaud-quawks.tailb0d68d.ts.net'
+const GOTIFY_APK_URL = 'https://github.com/gotify/android/releases/latest'
+
+function GotifySection() {
+  const { settings, updateSettings } = useSettings()
+  const { visible, show } = useSaveIndicator()
+  const [token, setToken] = useState(() => settings?.gotifyToken ?? '')
+
+  return (
+    <AccordionSection icon={<Smartphone size={16} />} title="Notifications Gotify" saved={visible}>
+      <p style={{ fontSize: '0.78rem', color: 'var(--ink-3)', margin: '0 0 12px' }}>
+        Gotify permet de recevoir des notifications push fiables même quand l'app est fermée.
+        Chaque utilisateur doit avoir son propre token pour ne recevoir que ses rappels.
+      </p>
+
+      {/* Liens rapides */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+        <a
+          href={GOTIFY_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '0.5rem 0.75rem', borderRadius: 8,
+            background: 'var(--paper-3)', border: '1px solid var(--rule)',
+            color: 'var(--ink)', textDecoration: 'none', fontSize: '0.78rem',
+          }}
+        >
+          <ExternalLink size={13} color="var(--amber)" />
+          <span>Ouvrir l'interface Gotify</span>
+          <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'var(--ink-3)', fontFamily: 'JetBrains Mono, monospace' }}>
+            Apps → Créer → copier le token
+          </span>
+        </a>
+        <a
+          href={GOTIFY_APK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '0.5rem 0.75rem', borderRadius: 8,
+            background: 'var(--paper-3)', border: '1px solid var(--rule)',
+            color: 'var(--ink)', textDecoration: 'none', fontSize: '0.78rem',
+          }}
+        >
+          <ExternalLink size={13} color="#6b8a5a" />
+          <span>Télécharger l'APK Gotify (Android)</span>
+          <span style={{ marginLeft: 'auto', fontSize: '0.65rem', color: 'var(--ink-3)', fontFamily: 'JetBrains Mono, monospace' }}>
+            github.com/gotify/android
+          </span>
+        </a>
+      </div>
+
+      {/* Champ token */}
+      <div className="settings-section-title">Mon token Gotify</div>
+      <Field
+        label="Token personnel"
+        hint="Coller le token de ton application Gotify — différent pour chaque utilisateur"
+        value={token}
+        onChange={setToken}
+        onBlur={() => updateSettings({ gotifyToken: token.trim() }, { onSuccess: show })}
+        type="text"
+        placeholder="ex: ApxKtfigDwA0dWa"
+        full
+      />
     </AccordionSection>
   )
 }
@@ -1356,7 +1407,7 @@ export function SettingsPage() {
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
-            V1.2J
+            V1.2K
           </span>
         }
       />
@@ -1375,6 +1426,7 @@ export function SettingsPage() {
         <TaxRateSection />
         <HolidaySection />
         <RemindersSection />
+        <GotifySection />
         <DangerZoneSection />
       </motion.div>
 

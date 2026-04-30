@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import { Timer, TrendingUp, ChevronLeft, ChevronRight, Sun, Moon, Clock, Calendar, Coffee, Sunrise, Sunset } from 'lucide-react'
@@ -339,28 +339,33 @@ export function HomePage() {
             </div>
           }
         />
-        <div style={{
-          flex: 1, minHeight: 0,
-          display: 'flex', flexDirection: 'column',
-          gap: '0.75rem',
-          padding: '0.75rem 0.875rem 0.875rem',
-          maxWidth: 900, margin: '0 auto', width: '100%', boxSizing: 'border-box',
-        }}>
-          {/* KPIs */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', flexShrink: 0 }}>
-            <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
-              <KpiCard label="Net estimé" value={netDisplay} accent="var(--moss)" icon={<TrendingUp size={14} />} />
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}>
+          <AnimatePresence mode="popLayout" initial={false} custom={swipe.direction}>
+            <motion.div
+              key={monthKey}
+              custom={swipe.direction}
+              initial={d => ({ x: d === 0 ? 0 : d < 0 ? '100%' : '-100%', opacity: 0 })}
+              animate={{ x: 0, opacity: 1 }}
+              exit={d => ({ x: d < 0 ? '-100%' : '100%', opacity: 0 })}
+              transition={{ type: 'spring', stiffness: 300, damping: 32, mass: 0.8 }}
+              style={{
+                display: 'flex', flexDirection: 'column', gap: '0.75rem',
+                padding: '0.75rem 0.875rem 0.875rem',
+                maxWidth: 900, margin: '0 auto', width: '100%', boxSizing: 'border-box',
+                height: '100%',
+              }}
+            >
+              {/* KPIs */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', flexShrink: 0 }}>
+                <KpiCard label="Net estimé" value={netDisplay} accent="var(--moss)" icon={<TrendingUp size={14} />} />
+                <KpiCard label="Compteur" value={counterDisplay} accent="var(--amber)" icon={<Timer size={14} />} danger={!counterLoading && balanceMinutes < 0} />
+              </div>
+              {/* Calendrier étiré */}
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <MonthCalendar year={selectedYear} month={selectedMonth} stretch />
+              </div>
             </motion.div>
-            <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible">
-              <KpiCard label="Compteur" value={counterDisplay} accent="var(--amber)" icon={<Timer size={14} />} danger={!counterLoading && balanceMinutes < 0} />
-            </motion.div>
-          </div>
-          {/* Calendrier étiré */}
-          <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible"
-            style={{ flex: 1, minHeight: 0 }}
-          >
-            <MonthCalendar year={selectedYear} month={selectedMonth} stretch />
-          </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     )
