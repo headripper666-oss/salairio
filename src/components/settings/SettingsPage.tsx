@@ -1162,29 +1162,11 @@ function DangerZoneSection() {
   )
 
   return (
-    <div style={{
-      margin: '1.25rem 0 0',
-      borderRadius: 'var(--radius)',
-      border: '1px solid rgba(200,112,103,0.25)',
-      overflow: 'hidden',
-    }}>
-      {/* En-tête */}
-      <div style={{
-        padding: '0.875rem 1rem',
-        background: 'rgba(200,112,103,0.06)',
-        borderBottom: '1px solid rgba(200,112,103,0.15)',
-        display: 'flex', alignItems: 'center', gap: '0.625rem',
-      }}>
-        <AlertTriangle size={15} color="var(--rose)" />
-        <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--rose)', fontFamily: 'JetBrains Mono, monospace' }}>
-          Zone de danger
-        </span>
-        <span style={{ fontSize: '0.65rem', color: 'var(--ink-3)', marginLeft: 4 }}>
-          — Suppressions irréversibles
-        </span>
-      </div>
-
-      <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <AccordionSection
+      icon={<AlertTriangle size={16} color="var(--rose)" />}
+      title="Zone de danger"
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
         {/* Retour d'action */}
         <AnimatePresence>
@@ -1293,7 +1275,7 @@ function DangerZoneSection() {
         </div>
 
       </div>
-    </div>
+    </AccordionSection>
   )
 }
 
