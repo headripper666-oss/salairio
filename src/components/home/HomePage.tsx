@@ -322,20 +322,31 @@ export function HomePage() {
         onTouchEnd={swipe.onTouchEnd}
       >
         <PageHeader
-          title={monthLabel}
+          title=""
           action={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%', justifyContent: 'space-between' }}>
               <button className="theme-toggle" onClick={toggleDark} type="button">
                 {isDark ? <Sun size={13} /> : <Moon size={13} />}
                 <span>{isDark ? 'Jour' : 'Nuit'}</span>
               </button>
-              <button className="btn-icon" onClick={goToPrevMonth} type="button"><ChevronLeft size={16} /></button>
-              {!isCurrentMonth && (
-                <button className="btn-ghost" onClick={goToCurrentMonth} style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem' }} type="button">
-                  Aujourd'hui
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <button className="btn-icon" onClick={goToPrevMonth} type="button"><ChevronLeft size={16} /></button>
+                <span style={{
+                  fontFamily: 'Fraunces, serif', fontWeight: 600, fontSize: '1rem',
+                  color: 'var(--ink)', textTransform: 'capitalize', whiteSpace: 'nowrap',
+                  minWidth: 140, textAlign: 'center',
+                }}>
+                  {monthLabel}
+                </span>
+                <button className="btn-icon" onClick={goToNextMonth} type="button"><ChevronRight size={16} /></button>
+              </div>
+              {!isCurrentMonth ? (
+                <button className="btn-ghost" onClick={goToCurrentMonth} style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem', whiteSpace: 'nowrap' }} type="button">
+                  Auj.
                 </button>
+              ) : (
+                <div style={{ width: 40 }} />
               )}
-              <button className="btn-icon" onClick={goToNextMonth} type="button"><ChevronRight size={16} /></button>
             </div>
           }
         />
