@@ -867,6 +867,7 @@ function RemindersSection() {
   const [permState, setPermState] = useState<NotificationPermission>(
     'Notification' in window ? Notification.permission : 'denied',
   )
+  const [gotifyToken, setGotifyToken] = useState(() => settings?.gotifyToken ?? '')
 
   const shifts = settings?.shifts ?? []
   const times = settings?.pillReminderTimes ?? { offDay: '09:00' }
@@ -905,6 +906,27 @@ function RemindersSection() {
   return (
     <AccordionSection icon={<Bell size={16} />} title="Rappels" saved={visible}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+
+        {/* ── Token Gotify ── */}
+        <div>
+          <p className="settings-section-title" style={{ padding: 0, marginBottom: 4 }}>Token Gotify personnel</p>
+          <span className="settings-hint" style={{ display: 'block', marginBottom: 8 }}>
+            Créer une application dans l'interface Gotify et coller son token ici. Chaque utilisateur doit avoir son propre token pour recevoir uniquement ses notifications.
+          </span>
+          <div className="settings-input-wrap">
+            <input
+              type="text"
+              value={gotifyToken}
+              onChange={e => setGotifyToken(e.target.value)}
+              onBlur={() => updateSettings({ gotifyToken: gotifyToken.trim() }, { onSuccess: show })}
+              className="settings-input"
+              placeholder="ex: ApxKtfigDwA0dWa"
+              style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8rem' }}
+            />
+          </div>
+        </div>
+
+        <div style={{ height: 1, background: 'var(--rule)' }} />
 
         {/* ── Rappels pilule ── */}
         <div>
@@ -1334,7 +1356,7 @@ export function SettingsPage() {
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
-            V1.2I
+            V1.2J
           </span>
         }
       />

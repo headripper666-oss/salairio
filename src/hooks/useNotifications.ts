@@ -1,7 +1,9 @@
-// Notifications via Web Push — le serveur Render planifie et envoie les push.
-// Le SW reçoit l'event push et affiche la notification, même app fermée.
+// Notifications via Gotify — le serveur Render planifie et envoie les push.
+// Chaque utilisateur a son propre token Gotify stocké dans ses réglages.
 
 import { useAuthStore } from '@/store/authStore'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 
 const PUSH_SERVER = 'https://salairio-push.onrender.com'
 
@@ -9,6 +11,17 @@ let subscriptionCache: PushSubscription | null = null
 
 function getUserId(): string | null {
   return useAuthStore.getState().user?.uid ?? null
+}
+
+async function getUserGotifyToken(): Promise<string | undefined> {
+  const uid = getUserId()
+  if (!uid) return undefined
+  try {
+    const snap = await getDoc(doc(db, 'users', uid, 'settings', 'main'))
+    return snap.exists() ? (snap.data() as any).gotifyToken : undefined
+  } catch {
+    return undefined
+  }
 }
 
 async function getSubscription(): Promise<PushSubscription | null> {
@@ -73,11 +86,12 @@ export async function scheduleNotification(id: string, title: string, body: stri
   const userId = getUserId()
   if (!userId) return
   await getSubscription()
+  const gotifyToken = await getUserGotifyToken()
 
   await fetch(`${PUSH_SERVER}/schedule`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, userId, title, body, at: at.getTime() }),
+    body: JSON.stringify({ id, userId, title, body, at: at.getTime(), gotifyToken }),
   }).catch(() => {})
 }
 

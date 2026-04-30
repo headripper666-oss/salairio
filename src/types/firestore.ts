@@ -77,6 +77,7 @@ export interface UserSettings {
   apptReminderRules?: { minutesBefore: number }[]  // règles de rappel RDV (ex: [{1440}, {60}])
   anciennetePct?: number          // majoration ancienneté (% du salaire de référence du poste)
   ancienneteBaseSalaire?: number  // salaire de référence du poste pour calcul ancienneté (€/mois)
+  gotifyToken?: string            // token Gotify personnel pour les notifications push
   updatedAt: Timestamp
 }
 
