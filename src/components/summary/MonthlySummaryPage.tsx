@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { format, addMonths, subMonths, parseISO } from 'date-fns'
@@ -148,10 +148,7 @@ export function MonthlySummaryPage() {
   const debit = result?.counterDebitMinutes ?? 0
   const solde = credit - debit
 
-  const swipe = useSwipe(
-    useCallback(() => next(), []),
-    useCallback(() => prev(), []),
-  )
+  const swipe = useSwipe(next, prev)
 
   return (
     <div className="flex flex-col h-full" {...swipe}>
