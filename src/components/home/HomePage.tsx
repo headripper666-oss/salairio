@@ -344,9 +344,14 @@ export function HomePage() {
             <motion.div
               key={monthKey}
               custom={swipe.direction}
-              initial={d => ({ x: d === 0 ? 0 : d < 0 ? '100%' : '-100%', opacity: 0 })}
-              animate={{ x: 0, opacity: 1 }}
-              exit={d => ({ x: d < 0 ? '-100%' : '100%', opacity: 0 })}
+              variants={{
+                enter: (d: number) => ({ x: d === 0 ? 0 : d < 0 ? '100%' : '-100%', opacity: 0 }),
+                center: { x: 0, opacity: 1 },
+                exit: (d: number) => ({ x: d < 0 ? '-100%' : '100%', opacity: 0 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
               transition={{ type: 'spring', stiffness: 300, damping: 32, mass: 0.8 }}
               style={{
                 display: 'flex', flexDirection: 'column', gap: '0.75rem',

@@ -172,9 +172,14 @@ export function MonthlySummaryPage() {
           <motion.div
             key={monthKey}
             custom={swipeDir}
-            initial={d => ({ x: d === 0 ? 0 : d < 0 ? '60%' : '-60%', opacity: 0 })}
-            animate={{ x: 0, opacity: 1 }}
-            exit={d => ({ x: d < 0 ? '-60%' : '60%', opacity: 0 })}
+            variants={{
+              enter: (d: number) => ({ x: d === 0 ? 0 : d < 0 ? '60%' : '-60%', opacity: 0 }),
+              center: { x: 0, opacity: 1 },
+              exit: (d: number) => ({ x: d < 0 ? '-60%' : '60%', opacity: 0 }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
             transition={{ type: 'spring', stiffness: 320, damping: 34, mass: 0.8 }}
           >
           <div className="px-4 space-y-4 md:space-y-0 md:grid md:gap-5 md:items-start"
