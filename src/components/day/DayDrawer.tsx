@@ -96,6 +96,16 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
     setApptTime('09:00')
   }, [date, existingDay])
 
+  // Bouton retour Android / gestuelle retour PWA
+  useEffect(() => {
+    if (date !== null) {
+      history.pushState({ drawerOpen: true }, '')
+      const handler = () => onClose()
+      window.addEventListener('popstate', handler)
+      return () => window.removeEventListener('popstate', handler)
+    }
+  }, [date !== null])
+
   const showOvertime = status === 'matin' || status === 'apres_midi'
   const showJourSuppFields = status === 'jour_supp'
   const showMealPicker = status === 'matin' || status === 'apres_midi' || status === 'jour_supp'

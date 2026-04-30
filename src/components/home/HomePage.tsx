@@ -1,9 +1,10 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import { Timer, TrendingUp, ChevronLeft, ChevronRight, Sun, Moon, Clock, Calendar, Coffee, Sunrise, Sunset } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useSwipe } from '@/hooks/useSwipe'
 import { MonthCalendar } from '@/components/home/MonthCalendar'
 import { useUIStore } from '@/store/uiStore'
 import { useSalaryEngine } from '@/hooks/useSalaryEngine'
@@ -307,13 +308,19 @@ export function HomePage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
+  const swipe = useSwipe(
+    useCallback(() => goToNextMonth(), [goToNextMonth]),
+    useCallback(() => goToPrevMonth(), [goToPrevMonth]),
+  )
+
   if (!isDesktop) {
     // ── VUE MOBILE ──
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column',
-        height: 'calc(100dvh - var(--nav-height-mobile))',
-      }}>
+      <div
+        style={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - var(--nav-height-mobile))' }}
+        onTouchStart={swipe.onTouchStart}
+        onTouchEnd={swipe.onTouchEnd}
+      >
         <PageHeader
           title={monthLabel}
           action={

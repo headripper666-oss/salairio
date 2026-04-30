@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import { format, addMonths, subMonths, parseISO } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useSwipe } from '@/hooks/useSwipe'
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton'
 import { useSalaryEngine } from '@/hooks/useSalaryEngine'
 import { useMonthlySummary } from '@/hooks/useMonthlySummary'
@@ -142,8 +143,13 @@ export function MonthlySummaryPage() {
   const debit = result?.counterDebitMinutes ?? 0
   const solde = credit - debit
 
+  const swipe = useSwipe(
+    useCallback(() => next(), []),
+    useCallback(() => prev(), []),
+  )
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" {...swipe}>
       <PageHeader title="Synthèse" />
 
       <div className="flex-1 overflow-y-auto pb-24">
