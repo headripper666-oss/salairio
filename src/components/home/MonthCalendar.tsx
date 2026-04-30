@@ -9,6 +9,15 @@ import { getDaysInMonth, getFirstDayOfMonth, toDateStr, isToday } from '@/utils/
 
 const DAYS_HEADER = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim']
 
+// Numéro de semaine ISO 8601 (semaine commence le lundi)
+function getISOWeek(date: Date): number {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7))
+  const week1 = new Date(d.getFullYear(), 0, 4)
+  return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7)
+}
+
 interface MonthCalendarProps {
   year: number
   month: number
@@ -99,8 +108,10 @@ export function MonthCalendar({ year, month, stretch = false }: MonthCalendarPro
           padding: isMobile ? '6px' : '12px',
           ...(stretch ? { flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 } : {}),
         }}>
-          {/* En-têtes jours */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: isMobile ? '3px' : '6px' }}>
+          {/* En-têtes jours (colonne S + 7 jours) */}
+          <div style={{ display: 'grid', gridTemplateColumns: `${isMobile ? '18px' : '24px'} repeat(7, 1fr)`, marginBottom: isMobile ? '3px' : '6px' }}>
+            {/* Cellule vide au-dessus de la colonne semaine */}
+            <div />
             {DAYS_HEADER.map((d, i) => (
               <div key={i} style={{
                 textAlign: 'center',
@@ -109,7 +120,7 @@ export function MonthCalendar({ year, month, stretch = false }: MonthCalendarPro
                 fontWeight: 500,
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
-                color: i >= 5 ? 'var(--ink-3)' : 'var(--ink-3)',
+                color: 'var(--ink-3)',
                 padding: '3px 0 6px',
               }}>
                 {d}
@@ -117,15 +128,57 @@ export function MonthCalendar({ year, month, stretch = false }: MonthCalendarPro
             ))}
           </div>
 
-          {/* Grille */}
+          {/* Grille avec numéros de semaine */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
+            gridTemplateColumns: `${isMobile ? '18px' : '24px'} repeat(7, 1fr)`,
             gap: isMobile ? '2px' : '4px',
             ...(stretch ? { flex: 1, gridAutoRows: '1fr', minHeight: 0 } : {}),
           }}>
             {cells.map((cell, i) => {
-              if (!cell) return <div key={i} style={stretch ? {} : { minHeight: isMobile ? 52 : 80 }} />
+              const isFirstOfRow = i % 7 === 0
+              // Numéro de semaine : calculé depuis le premier jour non-null de la ligne
+              const weekNum = (() => {
+                if (!isFirstOfRow) return null
+                for (let j = i; j < i + 7; j++) {
+                  if (cells[j]) {
+                    const c = cells[j]!
+                    return getISOWeek(new Date(c.date))
+                  }
+                }
+                return null
+              })()
+
+              const weekCell = isFirstOfRow ? (
+                <div key={`w-${i}`} style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center',
+                  paddingTop: isMobile ? 6 : 8,
+                  ...(stretch ? {} : { minHeight: isMobile ? 52 : 80 }),
+                }}>
+                  {weekNum !== null && (
+                    <span style={{
+                      fontFamily: 'Fraunces, serif',
+                      fontStyle: 'italic',
+                      fontWeight: 400,
+                      fontSize: isMobile ? '0.55rem' : '0.65rem',
+                      color: 'var(--ink-4)',
+                      lineHeight: 1,
+                      userSelect: 'none',
+                    }}>
+                      {weekNum}
+                    </span>
+                  )}
+                </div>
+              ) : null
+
+              if (!cell) return (
+                <div key={`empty-${i}`} style={{ display: 'contents' }}>
+                  {weekCell}
+                  <div style={stretch ? {} : { minHeight: isMobile ? 52 : 80 }} />
+                </div>
+              )
 
               const { day, date } = cell
               const enriched = dayMap.get(date)
@@ -152,8 +205,9 @@ export function MonthCalendar({ year, month, stretch = false }: MonthCalendarPro
                     : '1px solid var(--rule)'
 
               return (
+                <div key={i} style={{ display: 'contents' }}>
+                  {weekCell}
                 <button
-                  key={i}
                   type="button"
                   onClick={() => setSelectedDate(date)}
                   style={{
@@ -274,6 +328,7 @@ export function MonthCalendar({ year, month, stretch = false }: MonthCalendarPro
                     )}
                   </div>
                 </button>
+                </div>
               )
             })}
           </div>
