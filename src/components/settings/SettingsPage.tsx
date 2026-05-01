@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useMemo } from 'react'
 import {
   DollarSign, Clock, Zap, TrendingUp, CalendarDays, Bell,
   ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2, Check, AlertTriangle,
@@ -868,9 +868,10 @@ function RemindersSection() {
     'Notification' in window ? Notification.permission : 'denied',
   )
   const shifts = settings?.shifts ?? []
-  const times = settings?.pillReminderTimes ?? { offDay: '09:00' }
+
+  const times = useMemo(() => settings?.pillReminderTimes ?? { offDay: '09:00' }, [settings?.pillReminderTimes])
   const enabled = settings?.pillReminderEnabled ?? false
-  const apptRules = settings?.apptReminderRules ?? []
+  const apptRules = useMemo(() => settings?.apptReminderRules ?? [], [settings?.apptReminderRules])
 
   const handleToggle = useCallback(async () => {
     if (!enabled) {
@@ -883,7 +884,7 @@ function RemindersSection() {
 
   const saveTime = useCallback((key: string, val: string) => {
     const next = { ...times, [key]: val }
-    updateSettings({ pillReminderTimes: next as any }, { onSuccess: show })
+    updateSettings({ pillReminderTimes: next as UserSettings['pillReminderTimes'] }, { onSuccess: show })
   }, [times, updateSettings, show])
 
   const addApptRule = useCallback((minutesBefore: number) => {
@@ -898,7 +899,7 @@ function RemindersSection() {
   }, [apptRules, updateSettings, show])
 
   const availablePresets = APPT_REMINDER_PRESETS.filter(
-    p => !apptRules.some(r => r.minutesBefore === p.value)
+    p => !apptRules.some((r: { minutesBefore: number }) => r.minutesBefore === p.value)
   )
 
   return (
