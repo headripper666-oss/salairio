@@ -4,6 +4,7 @@
 import { useAuthStore } from '@/store/authStore'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import type { UserSettings } from '@/types/firestore'
 
 const PUSH_SERVER = 'https://salairio-push.onrender.com'
 
@@ -108,8 +109,5 @@ export async function cancelNotificationsWithPrefix(prefix: string) {
 }
 
 export function getScheduledIds(): string[] {
-  return []
-}
-cheduledIds(): string[] {
   return []
 }

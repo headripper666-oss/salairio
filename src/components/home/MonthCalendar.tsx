@@ -362,6 +362,7 @@ export function MonthCalendar({ year, month, stretch = false }: MonthCalendarPro
       </div>
 
       <DayDrawer
+        key={selectedDate}
         date={selectedDate}
         year={year}
         month={month}

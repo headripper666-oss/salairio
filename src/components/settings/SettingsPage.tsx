@@ -16,7 +16,7 @@ import { formatDateShort, monthKeyToLabel } from '@/utils/formatters'
 import { cleanMonth, cleanYear, resetAccount } from '@/services/firestore/cleanup'
 import { useAuthStore } from '@/store/authStore'
 import { useQueryClient } from '@tanstack/react-query'
-import type { MajorationRule, ShiftDefinition } from '@/types/firestore'
+import type { UserSettings, MajorationRule, ShiftDefinition } from '@/types/firestore'
 
 // ─── Hook save indicator ───────────────────────────────────────────────────────
 function useSaveIndicator() {
