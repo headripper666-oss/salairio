@@ -24,6 +24,7 @@ Permet à Renaud de savoir quand tester la nouvelle version.
 ## État d'avancement (mai 2026)
 - ✅ Étapes 1–6 validées : auth, Firestore, calendrier, moteur salaire, synthèse, annuel, PWA offline
 - ✅ V1.1 : repas, RDV, rappels pilule, notifications
+- ✅ V1.3B : Stats de travail temps réel + Fix UI mobile
 - ✅ V1.3A : analyse fiche de paie Mistral (appel direct front, PDF.js multi-pages, chat, comparaison)
 - 🔲 Étape 7 : polish + déploiement GitHub Pages final
 

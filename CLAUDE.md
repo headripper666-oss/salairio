@@ -37,7 +37,7 @@ npm run deploy    # build + déploiement GitHub Pages
 - Services Firestore dans `src/services/firestore/`
 - Moteur de calcul dans `src/engine/`
 - Types Firestore dans `src/types/firestore.ts`
-- Versionnage : suffixe lettre (V1.3A, V1.3B…) à chaque déploiement pour que Renaud sache quand tester
+- Versionnage : suffixe lettre (V1.3A, V1.3B, V1.3C…) à chaque déploiement pour que Renaud sache quand tester
 
 ## Firebase
 - Project ID : `salairio`

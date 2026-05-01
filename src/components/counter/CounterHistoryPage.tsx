@@ -424,153 +424,162 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
             onClick={handleClose}
             style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.75)' }}
           />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 30, stiffness: 320 }}
-            onClick={e => e.stopPropagation()}
-            style={{
-              position: 'fixed',
-              top: '50%', left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 'min(calc(100vw - 2rem), 400px)',
-              maxHeight: 'calc(100% - 4rem)',
-              overflowY: 'auto',
-              borderRadius: 16,
-              background: 'var(--paper-2)',
-              border: '1px solid var(--rule)',
-              zIndex: 51,
-              padding: '1.25rem',
-              boxSizing: 'border-box',
-            }}
-          >
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  Ajustement manuel
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 51,
+            pointerEvents: 'none',
+            padding: '1rem',
+          }}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                pointerEvents: 'auto',
+                width: '100%',
+                maxWidth: 400,
+                maxHeight: 'calc(100% - 2rem)',
+                overflowY: 'auto',
+                borderRadius: 16,
+                background: 'var(--paper-2)',
+                border: '1px solid var(--rule)',
+                padding: '1.25rem',
+                boxSizing: 'border-box',
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    Ajustement manuel
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--ink-3)', marginTop: 2 }}>
+                    Correction du compteur (motif obligatoire)
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--ink-3)', marginTop: 2 }}>
-                  Correction du compteur (motif obligatoire)
-                </div>
+                <button
+                  type="button" onClick={handleClose}
+                  style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer', padding: 4, flexShrink: 0 }}
+                >
+                  <X size={18} />
+                </button>
               </div>
-              <button
-                type="button" onClick={handleClose}
-                style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer', padding: 4, flexShrink: 0 }}
-              >
-                <X size={18} />
-              </button>
-            </div>
 
-            {/* Signe + durée */}
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{
-                fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: '0.5rem',
-              }}>
-                Durée
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                {/* Toggle +/- */}
-                <div style={{ display: 'flex', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-                  {(['+', '-'] as const).map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSign(s)}
-                      style={{
-                        width: 40, height: 40,
-                        background: sign === s
-                          ? (s === '+' ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)')
-                          : 'transparent',
-                        border: 'none', cursor: 'pointer',
-                        color: sign === s
-                          ? (s === '+' ? '#34D399' : '#c87067')
-                          : '#8e8775',
-                        fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: '1.1rem', fontWeight: 700,
-                        transition: 'all 0.15s',
-                      }}
-                    >
-                      {s}
-                    </button>
-                  ))}
+              {/* Signe + durée */}
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{
+                  fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em',
+                  textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: '0.5rem',
+                }}>
+                  Durée
                 </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  {/* Toggle +/- */}
+                  <div style={{ display: 'flex', borderRadius: 10, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+                    {(['+', '-'] as const).map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSign(s)}
+                        style={{
+                          width: 40, height: 40,
+                          background: sign === s
+                            ? (s === '+' ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)')
+                            : 'transparent',
+                          border: 'none', cursor: 'pointer',
+                          color: sign === s
+                            ? (s === '+' ? '#34D399' : '#c87067')
+                            : '#8e8775',
+                          fontFamily: "'JetBrains Mono', monospace",
+                          fontSize: '1.1rem', fontWeight: 700,
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
 
-                {/* Input HH:MM */}
-                <input
-                  type="text"
-                  placeholder="1:30"
-                  value={timeInput}
-                  onChange={e => { setTimeInput(autoFormatHHMM(e.target.value)); setTimeError('') }}
+                  {/* Input HH:MM */}
+                  <input
+                    type="text"
+                    placeholder="1:30"
+                    value={timeInput}
+                    onChange={e => { setTimeInput(autoFormatHHMM(e.target.value)); setTimeError('') }}
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      background: 'var(--paper-3)',
+                      border: `1px solid ${timeError ? '#c87067' : 'var(--border-default)'}`,
+                      borderRadius: 10, padding: '0 0.75rem',
+                      height: 40,
+                      color: 'var(--ink)',
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: '1rem',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                {timeError && (
+                  <p style={{ fontSize: '0.68rem', color: '#c87067', marginTop: 4 }}>{timeError}</p>
+                )}
+              </div>
+
+              {/* Motif */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <div style={{
+                  fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em',
+                  textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: '0.5rem',
+                }}>
+                  Motif <span style={{ color: '#c87067' }}>*</span>
+                </div>
+                <textarea
+                  placeholder="Ex : Correction saisie du 15 mars…"
+                  value={note}
+                  onChange={e => setNote(e.target.value)}
+                  rows={2}
                   style={{
-                    flex: 1,
-                    minWidth: 0,
+                    width: '100%', boxSizing: 'border-box',
                     background: 'var(--paper-3)',
-                    border: `1px solid ${timeError ? '#c87067' : 'var(--border-default)'}`,
-                    borderRadius: 10, padding: '0 0.75rem',
-                    height: 40,
-                    color: 'var(--ink)',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: '1rem',
-                    outline: 'none',
-                    boxSizing: 'border-box',
+                    border: `1px solid ${noteInvalid && mutation.isError ? '#c87067' : 'var(--border-default)'}`,
+                    borderRadius: 10, padding: '0.6rem 0.75rem',
+                    color: 'var(--ink)', fontSize: '0.85rem',
+                    resize: 'none', outline: 'none',
+                    fontFamily: 'inherit',
                   }}
                 />
               </div>
-              {timeError && (
-                <p style={{ fontSize: '0.68rem', color: '#c87067', marginTop: 4 }}>{timeError}</p>
+
+              {mutation.isError && (
+                <p style={{ fontSize: '0.72rem', color: '#c87067', marginBottom: '0.75rem' }}>
+                  Une erreur est survenue. Réessaie.
+                </p>
               )}
-            </div>
 
-            {/* Motif */}
-            <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{
-                fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: '0.5rem',
-              }}>
-                Motif <span style={{ color: '#c87067' }}>*</span>
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button type="button" onClick={handleClose} className="btn-ghost" style={{ flex: 1, minWidth: 0 }}>
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={mutation.isPending || !note.trim()}
+                  className="btn-primary"
+                  style={{ flex: 1, minWidth: 0 }}
+                >
+                  {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}
+                </button>
               </div>
-              <textarea
-                placeholder="Ex : Correction saisie du 15 mars…"
-                value={note}
-                onChange={e => setNote(e.target.value)}
-                rows={2}
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  background: 'var(--paper-3)',
-                  border: `1px solid ${noteInvalid && mutation.isError ? '#c87067' : 'var(--border-default)'}`,
-                  borderRadius: 10, padding: '0.6rem 0.75rem',
-                  color: 'var(--ink)', fontSize: '0.85rem',
-                  resize: 'none', outline: 'none',
-                  fontFamily: 'inherit',
-                }}
-              />
-            </div>
-
-            {mutation.isError && (
-              <p style={{ fontSize: '0.72rem', color: '#c87067', marginBottom: '0.75rem' }}>
-                Une erreur est survenue. Réessaie.
-              </p>
-            )}
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button type="button" onClick={handleClose} className="btn-ghost" style={{ flex: 1, minWidth: 0 }}>
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={mutation.isPending || !note.trim()}
-                className="btn-primary"
-                style={{ flex: 1, minWidth: 0 }}
-              >
-                {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}
-              </button>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
