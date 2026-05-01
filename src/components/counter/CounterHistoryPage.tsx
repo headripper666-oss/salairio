@@ -434,8 +434,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
               position: 'fixed',
               top: '50%', left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: 'calc(100% - 2rem)',
-              maxWidth: 400,
+              width: 'min(calc(100vw - 2rem), 400px)',
               maxHeight: 'calc(100% - 4rem)',
               overflowY: 'auto',
               borderRadius: 16,
@@ -443,12 +442,13 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
               border: '1px solid var(--rule)',
               zIndex: 51,
               padding: '1.25rem',
+              boxSizing: 'border-box',
             }}
           >
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ink)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   Ajustement manuel
                 </div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--ink-3)', marginTop: 2 }}>
@@ -457,7 +457,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
               </div>
               <button
                 type="button" onClick={handleClose}
-                style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer', padding: 4 }}
+                style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer', padding: 4, flexShrink: 0 }}
               >
                 <X size={18} />
               </button>
@@ -506,6 +506,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
                   onChange={e => { setTimeInput(autoFormatHHMM(e.target.value)); setTimeError('') }}
                   style={{
                     flex: 1,
+                    minWidth: 0,
                     background: 'var(--paper-3)',
                     border: `1px solid ${timeError ? '#c87067' : 'var(--border-default)'}`,
                     borderRadius: 10, padding: '0 0.75rem',
@@ -514,6 +515,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
                     fontFamily: "'JetBrains Mono', monospace",
                     fontSize: '1rem',
                     outline: 'none',
+                    boxSizing: 'border-box',
                   }}
                 />
               </div>
@@ -555,7 +557,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button type="button" onClick={handleClose} className="btn-ghost" style={{ flex: 1 }}>
+              <button type="button" onClick={handleClose} className="btn-ghost" style={{ flex: 1, minWidth: 0 }}>
                 Annuler
               </button>
               <button
@@ -563,7 +565,7 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
                 onClick={handleSave}
                 disabled={mutation.isPending || !note.trim()}
                 className="btn-primary"
-                style={{ flex: 1 }}
+                style={{ flex: 1, minWidth: 0 }}
               >
                 {mutation.isPending ? 'Enregistrement…' : 'Enregistrer'}
               </button>
