@@ -436,6 +436,8 @@ function ManualAdjustmentDialog({ open, onClose }: ManualAdjustmentDialogProps) 
               transform: 'translate(-50%, -50%)',
               width: 'calc(100% - 2rem)',
               maxWidth: 400,
+              maxHeight: 'calc(100% - 4rem)',
+              overflowY: 'auto',
               borderRadius: 16,
               background: 'var(--paper-2)',
               border: '1px solid var(--rule)',
