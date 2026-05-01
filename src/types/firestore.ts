@@ -78,6 +78,9 @@ export interface UserSettings {
   anciennetePct?: number          // majoration ancienneté (% du salaire de référence du poste)
   ancienneteBaseSalaire?: number  // salaire de référence du poste pour calcul ancienneté (€/mois)
   gotifyToken?: string            // token Gotify personnel pour les notifications push
+  mistralApiKey?: string          // clé API Mistral pour l'analyse IA des fiches de paie
+  mistralModel?: string           // modèle Mistral utilisé (défaut: mistral-small-latest)
+  mistralSystemPrompt?: string    // prompt système personnalisable (pour maintenance)
   updatedAt: Timestamp
 }
 

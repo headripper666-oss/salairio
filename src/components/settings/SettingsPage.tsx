@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import {
   DollarSign, Clock, Zap, TrendingUp, CalendarDays, Bell,
   ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2, Check, AlertTriangle,
-  Smartphone, ExternalLink,
+  Smartphone, ExternalLink, Sparkles, Eye, EyeOff,
 } from 'lucide-react'
 import { requestNotificationPermission, scheduleNotification, isNotificationGranted, getScheduledIds } from '@/hooks/useNotifications'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -126,7 +126,7 @@ function ProfileSection() {
   const [firstName, setFirstName] = useState(() => settings?.firstName ?? '')
 
   return (
-    <AccordionSection icon={<CalendarDays size={16} />} title="Profil" defaultOpen saved={visible}>
+    <AccordionSection icon={<CalendarDays size={16} />} title="Profil" saved={visible}>
       <div className="settings-grid">
         <Field
           label="Prénom"
@@ -180,7 +180,6 @@ function PaySection() {
     <AccordionSection
       icon={<DollarSign size={16} />}
       title="Paramètres de paie"
-      defaultOpen
       saved={visible}
     >
       <div className="settings-grid">
@@ -1161,6 +1160,124 @@ function GotifySection() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// SECTION 8 — Analyse IA (Mistral)
+// ═══════════════════════════════════════════════════════════
+function MistralSection() {
+  const { settings, updateSettings } = useSettings()
+  const { visible, show } = useSaveIndicator()
+
+  const [apiKey, setApiKey] = useState(() => settings?.mistralApiKey ?? '')
+  const [model, setModel] = useState(() => settings?.mistralModel ?? 'mistral-small-latest')
+  const [prompt, setPrompt] = useState(() => settings?.mistralSystemPrompt ?? '')
+  const [showKey, setShowKey] = useState(false)
+
+  return (
+    <AccordionSection icon={<Sparkles size={16} />} title="Analyse IA (Mistral)" saved={visible}>
+      <p style={{ fontSize: '0.78rem', color: 'var(--ink-3)', margin: '0 0 14px', lineHeight: 1.6 }}>
+        Analyse tes fiches de paie avec Mistral AI pour comprendre les écarts entre ton salaire estimé et le réel.
+        La clé API est stockée dans Firestore, jamais transmise à un tiers.
+      </p>
+
+      {/* Clé API */}
+      <div className="settings-field settings-field--full">
+        <label className="settings-label">Clé API Mistral</label>
+        <span className="settings-hint">
+          Crée une clé sur{' '}
+          <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer"
+            style={{ color: 'var(--amber)', textDecoration: 'none' }}>
+            console.mistral.ai
+          </a>
+          {' '}· ~0,003 € / analyse
+        </span>
+        <div className="settings-input-wrap" style={{ position: 'relative' }}>
+          <input
+            type={showKey ? 'text' : 'password'}
+            value={apiKey}
+            onChange={e => setApiKey(e.target.value)}
+            onBlur={() => updateSettings({ mistralApiKey: apiKey.trim() }, { onSuccess: show })}
+            className="settings-input"
+            placeholder="sk-..."
+            style={{ paddingRight: 38 }}
+            autoComplete="off"
+          />
+          <button
+            type="button"
+            onClick={() => setShowKey(v => !v)}
+            title={showKey ? 'Masquer' : 'Afficher'}
+            style={{
+              position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--ink-4)', display: 'flex', alignItems: 'center', padding: 2,
+            }}
+          >
+            {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
+          </button>
+        </div>
+      </div>
+
+      <div className="settings-divider" />
+      <div className="settings-section-title">Modèle utilisé</div>
+
+      {/* Modèle */}
+      <div className="settings-field settings-field--full">
+        <label className="settings-label">Nom du modèle</label>
+        <span className="settings-hint">
+          Actuellement : <strong style={{ color: 'var(--amber)', fontFamily: "'DM Mono', monospace" }}>mistral-small-latest</strong> (Small 4, vision + texte)
+        </span>
+        <div className="settings-input-wrap">
+          <input
+            type="text"
+            value={model}
+            onChange={e => setModel(e.target.value)}
+            onBlur={() => updateSettings({ mistralModel: model.trim() }, { onSuccess: show })}
+            className="settings-input"
+            placeholder="mistral-small-latest"
+          />
+        </div>
+      </div>
+
+      <div className="settings-divider" />
+      <div className="settings-section-title">Prompt système</div>
+
+      {/* Prompt système */}
+      <div className="settings-field settings-field--full">
+        <label className="settings-label">Instructions par défaut</label>
+        <span className="settings-hint">
+          Laisser vide pour utiliser le prompt par défaut intégré à l'app.
+          Modifier uniquement pour ajuster le comportement du modèle.
+        </span>
+        <textarea
+          value={prompt}
+          onChange={e => setPrompt(e.target.value)}
+          onBlur={() => updateSettings({ mistralSystemPrompt: prompt.trim() }, { onSuccess: show })}
+          className="settings-input"
+          placeholder="Laisser vide = prompt par défaut"
+          rows={6}
+          style={{ resize: 'vertical', fontFamily: "'DM Mono', monospace", fontSize: '0.72rem', lineHeight: 1.55 }}
+        />
+      </div>
+      {prompt && (
+        <button
+          type="button"
+          onClick={() => {
+            setPrompt('')
+            updateSettings({ mistralSystemPrompt: '' }, { onSuccess: show })
+          }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '0.3rem 0.65rem', borderRadius: 6, marginTop: 4,
+            border: '1px dashed var(--rule)',
+            background: 'transparent', color: 'var(--ink-3)', fontSize: '0.72rem', cursor: 'pointer',
+          }}
+        >
+          Revenir au prompt par défaut
+        </button>
+      )}
+    </AccordionSection>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
 // ZONE DE DANGER
 // ═══════════════════════════════════════════════════════════
 
@@ -1407,7 +1524,7 @@ export function SettingsPage() {
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
-            V1.2M
+            V1.3A
           </span>
         }
       />
@@ -1427,6 +1544,7 @@ export function SettingsPage() {
         <HolidaySection />
         <RemindersSection />
         <GotifySection />
+        <MistralSection />
         <DangerZoneSection />
       </motion.div>
 

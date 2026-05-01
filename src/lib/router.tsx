@@ -9,6 +9,7 @@ import { BonusesPage } from '@/components/bonuses/BonusesPage'
 import { CounterHistoryPage } from '@/components/counter/CounterHistoryPage'
 import { AnnualPage } from '@/components/annual/AnnualPage'
 import { AppointmentsPage } from '@/components/appointments/AppointmentsPage'
+import { PayslipAnalyzerPage } from '@/components/payslip/PayslipAnalyzerPage'
 
 export const router = createHashRouter([
   {
@@ -31,6 +32,7 @@ export const router = createHashRouter([
       { path: 'bonuses', element: <BonusesPage /> },
       { path: 'annual', element: <AnnualPage /> },
       { path: 'appointments', element: <AppointmentsPage /> },
+      { path: 'analyze',     element: <PayslipAnalyzerPage /> },
     ],
   },
   {

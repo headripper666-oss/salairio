@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); command=$(echo \"$input\" | jq -r '.tool_input.command // \"\"'); if echo \"$command\" | grep -qE '(rtk )?git commit'; then msg=$(git log -1 --pretty=%s 2>/dev/null); if echo \"$msg\" | grep -qE 'V[0-9]+\\.[0-9]+[A-Z]'; then version=$(echo \"$msg\" | grep -oE 'V[0-9]+\\.[0-9]+[A-Z]' | head -1); if ! grep -q \"$version\" src/components/settings/SettingsPage.tsx 2>/dev/null; then echo \"{\\\"hookSpecificOutput\\\": {\\\"hookEventName\\\": \\\"PostToolUse\\\", \\\"additionalContext\\\": \\\"⚠️ Version $version détectée dans le commit mais absente de SettingsPage.tsx — pense à mettre à jour le badge version dans src/components/settings/SettingsPage.tsx avant de déployer.\\\"}}\"; fi; fi; fi",
+            "statusMessage": "Vérification version SettingsPage…"
+          }
+        ]
+      }
+    ]
+  }
+}

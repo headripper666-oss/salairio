@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Variants } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
-import { Timer, TrendingUp, ChevronLeft, ChevronRight, Sun, Moon, Clock, Calendar, Coffee, Sunrise, Sunset } from 'lucide-react'
+import { Timer, ChevronLeft, ChevronRight, Sun, Moon, Clock, Calendar, Coffee, Sunrise, Sunset } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useSwipe } from '@/hooks/useSwipe'
 import { MonthCalendar } from '@/components/home/MonthCalendar'
@@ -296,8 +296,6 @@ export function HomePage() {
 
   // ── Décomposition salaire ──
   const hasResult = !salaryLoading && result
-  const netDisplay = salaryLoading ? '…' : result ? formatEuros(result.netAfterTax, { decimals: 2 }) : '—'
-  const counterDisplay = counterLoading ? '…' : formatMinutes(balanceMinutes, { compact: true, sign: balanceMinutes > 0 })
 
   // ── Desktop vs mobile ──
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 900)
@@ -371,11 +369,6 @@ export function HomePage() {
                 height: '100%',
               }}
             >
-              {/* KPIs */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', flexShrink: 0 }}>
-                <KpiCard label="Net estimé" value={netDisplay} accent="var(--moss)" icon={<TrendingUp size={14} />} />
-                <KpiCard label="Compteur" value={counterDisplay} accent="var(--amber)" icon={<Timer size={14} />} danger={!counterLoading && balanceMinutes < 0} />
-              </div>
               {/* Calendrier étiré */}
               <div style={{ flex: 1, minHeight: 0 }}>
                 <MonthCalendar year={selectedYear} month={selectedMonth} stretch />

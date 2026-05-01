@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Star, Plus, Trash2 } from 'lucide-react'
+import { X, Star, Plus, Trash2, Pencil, Check } from 'lucide-react'
 import { StatusSelector } from './StatusSelector'
 import { OvertimeInput } from './OvertimeInput'
 import { DayNoteInput } from './DayNoteInput'
@@ -65,11 +65,45 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
   const [showApptForm, setShowApptForm] = useState(false)
   const [apptTitle, setApptTitle] = useState('')
   const [apptTime, setApptTime] = useState('09:00')
+  const [apptNote, setApptNote] = useState('')
+
+  // Édition d'un RDV existant depuis le drawer
+  const [editingApptId, setEditingApptId] = useState<string | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDate, setEditDate] = useState('')
+  const [editTime, setEditTime] = useState('')
+  const [editNote, setEditNote] = useState('')
 
   function resetApptForm() {
     setApptTitle('')
     setApptTime('09:00')
+    setApptNote('')
     setShowApptForm(false)
+  }
+
+  function startEditAppt(appt: { id: string; title: string; date: string; time: string; note?: string }) {
+    setEditingApptId(appt.id)
+    setEditTitle(appt.title)
+    setEditDate(appt.date)
+    setEditTime(appt.time)
+    setEditNote(appt.note ?? '')
+    setShowApptForm(false)
+  }
+
+  function cancelEditAppt() {
+    setEditingApptId(null)
+  }
+
+  function handleSaveEditAppt() {
+    if (!editTitle.trim() || !editingApptId) return
+    saveAppt.mutate({
+      id: editingApptId,
+      date: editDate,
+      title: editTitle.trim(),
+      time: editTime,
+      note: editNote.trim(),
+    })
+    setEditingApptId(null)
   }
 
   function handleSaveAppt() {
@@ -80,6 +114,7 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
       date,
       title: apptTitle.trim(),
       time: apptTime,
+      note: apptNote.trim(),
     })
     resetApptForm()
   }
@@ -94,6 +129,8 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
     setShowApptForm(false)
     setApptTitle('')
     setApptTime('09:00')
+    setApptNote('')
+    setEditingApptId(null)
   }, [date, existingDay])
 
   // Bouton retour Android / gestuelle retour PWA
@@ -406,28 +443,116 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
                       .slice()
                       .sort((a, b) => a.time.localeCompare(b.time))
                       .map(appt => (
-                        <div key={appt.id} style={{
-                          display: 'flex', alignItems: 'center', gap: '0.5rem',
-                          padding: '0.4rem 0.6rem',
-                          background: 'var(--paper-3)',
-                          border: '1px solid var(--rule)',
-                          borderRadius: 8,
-                        }}>
-                          <span style={{ color: 'var(--sky, #5b9bd5)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
-                            {appt.time}
-                          </span>
-                          <span style={{ flex: 1, fontSize: '0.82rem', color: 'var(--ink)' }}>{appt.title}</span>
-                          <button
-                            type="button"
-                            onClick={() => deleteAppt.mutate(appt.id)}
-                            style={{
-                              background: 'none', border: 'none', cursor: 'pointer',
-                              color: 'var(--ink-3)', padding: 2, borderRadius: 4,
-                              display: 'flex', alignItems: 'center',
-                            }}
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                        <div key={appt.id}>
+                          {editingApptId === appt.id ? (
+                            /* ── Formulaire d'édition inline ── */
+                            <div style={{
+                              padding: '0.6rem', border: '1px solid rgba(214,138,60,0.35)',
+                              borderRadius: 8, background: 'var(--paper-3)',
+                              display: 'flex', flexDirection: 'column', gap: '0.45rem',
+                            }}>
+                              <input
+                                type="text"
+                                value={editTitle}
+                                onChange={e => setEditTitle(e.target.value)}
+                                placeholder="Titre"
+                                autoFocus
+                                style={{
+                                  padding: '0.4rem 0.5rem',
+                                  background: 'var(--paper-2)', border: '1px solid var(--rule)',
+                                  borderRadius: 6, color: 'var(--ink)', fontSize: '0.85rem', width: '100%', boxSizing: 'border-box',
+                                }}
+                              />
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+                                <input
+                                  type="date"
+                                  value={editDate}
+                                  onChange={e => setEditDate(e.target.value)}
+                                  style={{
+                                    padding: '0.4rem 0.5rem',
+                                    background: 'var(--paper-2)', border: '1px solid var(--rule)',
+                                    borderRadius: 6, color: 'var(--ink)', fontSize: '0.78rem', width: '100%', boxSizing: 'border-box',
+                                  }}
+                                />
+                                <input
+                                  type="time"
+                                  value={editTime}
+                                  onChange={e => setEditTime(e.target.value)}
+                                  style={{
+                                    padding: '0.4rem 0.5rem',
+                                    background: 'var(--paper-2)', border: '1px solid var(--rule)',
+                                    borderRadius: 6, color: 'var(--ink)', fontSize: '0.78rem', width: '100%', boxSizing: 'border-box',
+                                  }}
+                                />
+                              </div>
+                              <textarea
+                                value={editNote}
+                                onChange={e => setEditNote(e.target.value)}
+                                placeholder="Note (optionnel)"
+                                rows={2}
+                                style={{
+                                  padding: '0.4rem 0.5rem', resize: 'vertical',
+                                  background: 'var(--paper-2)', border: '1px solid var(--rule)',
+                                  borderRadius: 6, color: 'var(--ink)', fontSize: '0.78rem',
+                                  width: '100%', boxSizing: 'border-box', fontFamily: 'inherit',
+                                }}
+                              />
+                              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                <button type="button" onClick={cancelEditAppt} className="btn-ghost" style={{ flex: 1, fontSize: '0.78rem', padding: '0.3rem' }}>
+                                  Annuler
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={handleSaveEditAppt}
+                                  disabled={!editTitle.trim()}
+                                  className="btn-primary"
+                                  style={{ flex: 1, fontSize: '0.78rem', padding: '0.3rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                                >
+                                  <Check size={13} /> Enregistrer
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            /* ── Ligne RDV normale ── */
+                            <div style={{
+                              display: 'flex', alignItems: 'center', gap: '0.5rem',
+                              padding: '0.4rem 0.6rem',
+                              background: 'var(--paper-3)',
+                              border: '1px solid var(--rule)',
+                              borderRadius: 8,
+                            }}>
+                              <span style={{ color: 'var(--sky, #5b9bd5)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>
+                                {appt.time}
+                              </span>
+                              <span style={{ flex: 1, fontSize: '0.82rem', color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {appt.title}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => startEditAppt(appt)}
+                                style={{
+                                  background: 'none', border: 'none', cursor: 'pointer',
+                                  color: 'var(--ink-3)', padding: 2, borderRadius: 4,
+                                  display: 'flex', alignItems: 'center',
+                                }}
+                                aria-label="Modifier ce RDV"
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => deleteAppt.mutate(appt.id)}
+                                style={{
+                                  background: 'none', border: 'none', cursor: 'pointer',
+                                  color: 'var(--ink-3)', padding: 2, borderRadius: 4,
+                                  display: 'flex', alignItems: 'center',
+                                }}
+                                aria-label="Supprimer ce RDV"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                   </div>
@@ -444,10 +569,11 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
                       placeholder="Titre du RDV"
                       value={apptTitle}
                       onChange={e => setApptTitle(e.target.value)}
+                      autoFocus
                       style={{
                         padding: '0.4rem 0.5rem',
                         background: 'var(--paper-2)', border: '1px solid var(--rule)',
-                        borderRadius: 6, color: 'var(--ink)', fontSize: '0.85rem', width: '100%',
+                        borderRadius: 6, color: 'var(--ink)', fontSize: '0.85rem', width: '100%', boxSizing: 'border-box',
                       }}
                     />
                     <input
@@ -457,7 +583,19 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
                       style={{
                         padding: '0.4rem 0.5rem',
                         background: 'var(--paper-2)', border: '1px solid var(--rule)',
-                        borderRadius: 6, color: 'var(--ink)', fontSize: '0.85rem', width: '100%',
+                        borderRadius: 6, color: 'var(--ink)', fontSize: '0.85rem', width: '100%', boxSizing: 'border-box',
+                      }}
+                    />
+                    <textarea
+                      value={apptNote}
+                      onChange={e => setApptNote(e.target.value)}
+                      placeholder="Note (optionnel)"
+                      rows={2}
+                      style={{
+                        padding: '0.4rem 0.5rem', resize: 'vertical',
+                        background: 'var(--paper-2)', border: '1px solid var(--rule)',
+                        borderRadius: 6, color: 'var(--ink)', fontSize: '0.78rem',
+                        width: '100%', boxSizing: 'border-box', fontFamily: 'inherit',
                       }}
                     />
                     <div style={{ display: 'flex', gap: '0.4rem' }}>
@@ -483,7 +621,7 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setShowApptForm(true)}
+                    onClick={() => { setShowApptForm(true); setEditingApptId(null) }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 5,
                       padding: '0.35rem 0.6rem',
