@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ChevronLeft, ChevronRight, CalendarRange, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CalendarRange, CheckCircle2, AlertCircle } from 'lucide-react'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAnnualSummaries } from '@/hooks/useAnnualSummaries'
+import { useYearWorkStats } from '@/hooks/useYearWorkStats'
 import { formatEuros, formatMinutes, monthKeyToLabel } from '@/utils/formatters'
 import { getMotivationalMessage } from '@/utils/motivationalMessages'
 import { useUIStore } from '@/store/uiStore'
-import type { MonthlySummary } from '@/types/firestore'
+import type { MonthlySummary, WorkedDays } from '@/types/firestore'
 
 const MONTH_LABELS_SHORT = [
   'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
@@ -22,8 +23,8 @@ function currentMonthKey(): string {
   return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`
 }
 
-// ─── Totaux annuels depuis les mois sauvegardés ───────────────────────────────
-function computeAnnualTotals(summaries: Map<string, MonthlySummary>) {
+// ─── Totaux annuels depuis les mois sauvegardés et le calendrier ──────────────
+function computeAnnualTotals(summaries: Map<string, MonthlySummary>, calendarStats: Map<string, WorkedDays>) {
   let netTotal = 0
   let grossTotal = 0
   let overtimeMin = 0
@@ -32,26 +33,36 @@ function computeAnnualTotals(summaries: Map<string, MonthlySummary>) {
   let daysMatin = 0
   let daysAM = 0
   let daysSupp = 0
+  let totalMinutes = 0
 
+  // Financier : uniquement les mois sauvegardés
   summaries.forEach(s => {
     netTotal    += s.realNetAfterTax  ?? s.netAfterTax
     grossTotal  += s.realGrossTotal   ?? s.grossTotal
     overtimeMin += s.overtimePaidMinutes
     creditMin   += s.counterCreditMinutes
-    daysMatin   += s.workedDays?.matin      ?? 0
-    daysAM      += s.workedDays?.apres_midi ?? 0
-    daysSupp    += s.workedDays?.jour_supp  ?? 0
     count++
   })
 
-  return { netTotal, grossTotal, overtimeMin, creditMin, count, daysMatin, daysAM, daysSupp }
+  // Travail : on prend le calendrier pour tout l'année
+  calendarStats.forEach(s => {
+    daysMatin   += s.matin
+    daysAM      += s.apres_midi
+    daysSupp    += s.jour_supp
+    totalMinutes += s.totalMinutes
+  })
+
+  return { netTotal, grossTotal, overtimeMin, creditMin, count, daysMatin, daysAM, daysSupp, totalMinutes }
 }
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 export function AnnualPage() {
   const [year, setYear] = useState(new Date().getFullYear())
-  const { summaries, isLoading } = useAnnualSummaries(year)
+  const { summaries, isLoading: summariesLoading } = useAnnualSummaries(year)
+  const { stats: calendarStats, isLoading: statsLoading } = useYearWorkStats(year)
   const { isDark } = useUIStore()
+
+  const isLoading = summariesLoading || statsLoading
 
   const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 900)
   useEffect(() => {
@@ -63,7 +74,7 @@ export function AnnualPage() {
 
   const months = buildMonthKeys(year)
   const today = currentMonthKey()
-  const totals = computeAnnualTotals(summaries)
+  const totals = computeAnnualTotals(summaries, calendarStats)
   const motivMsg = getMotivationalMessage('general', 3)
 
   return (
@@ -92,40 +103,36 @@ export function AnnualPage() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 1rem 5rem' }}>
 
         {/* Cartes totaux annuels */}
-        {totals.count > 0 && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '0.625rem',
-            margin: '0.75rem 0 1.25rem',
-          }}>
-            <TotalCard label="Net annuel" value={formatEuros(totals.netTotal, { decimals: 0 })} accent="#6b8a5a" />
-            <TotalCard label="Brut annuel" value={formatEuros(totals.grossTotal, { decimals: 0 })} accent="#d68a3c" />
-            {totals.overtimeMin > 0 && (
-              <TotalCard label="Supp. payées" value={formatMinutes(totals.overtimeMin, { compact: true })} accent="#8aaee0" />
-            )}
-            <TotalCard label="Mois sauvegardés" value={`${totals.count} / 12`} accent="#8e8775" />
-          </div>
-        )}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isDesktop ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)',
+          gap: '0.625rem',
+          margin: '0.75rem 0 1.25rem',
+        }}>
+          <TotalCard label="Net annuel" value={formatEuros(totals.netTotal, { decimals: 0 })} accent="#6b8a5a" />
+          <TotalCard label="Brut annuel" value={formatEuros(totals.grossTotal, { decimals: 0 })} accent="#d68a3c" />
+          <TotalCard label="Jours travaillés" value={`${totals.daysMatin + totals.daysAM + totals.daysSupp}j`} accent="#82b4a0" />
+          <TotalCard label="Heures travaillées" value={formatMinutes(totals.totalMinutes, { compact: true })} accent="#f1c987" />
+        </div>
 
         {/* Message vide */}
-        {!isLoading && summaries.size === 0 && (
+        {!isLoading && summaries.size === 0 && calendarStats.size === 0 && (
           <div style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '2.5rem 0' }}>
             <CalendarRange size={32} style={{ margin: '0 auto 0.75rem', opacity: 0.3 }} />
-            <p style={{ fontSize: '0.9rem' }}>Aucune estimation sauvegardée pour {year}</p>
+            <p style={{ fontSize: '0.9rem' }}>Aucune donnée pour {year}</p>
             <p style={{ fontSize: '0.75rem', marginTop: 4 }}>
-              Va dans Synthèse → clique "Sauvegarder l'estimation" chaque mois
+              Saisis tes jours dans le calendrier pour voir les stats ici
             </p>
           </div>
         )}
 
         {/* Table scrollable */}
-        {(isLoading || summaries.size > 0) && (
+        {(isLoading || summaries.size > 0 || calendarStats.size > 0) && (
           <div style={{ overflowX: 'auto', borderRadius: 14, border: '1px solid var(--rule)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 520 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--rule)' }}>
-                  {['Mois', 'Net', 'Brut', 'Matin', 'AM', 'Supp.j', 'Total', 'H.supp', 'Cpt', ''].map((h, i) => (
+                  {['Mois', 'Net', 'Brut', 'Matin', 'AM', 'Supp.j', 'Total.j', 'Total.h', 'H.supp', 'Cpt', ''].map((h, i) => (
                     <th
                       key={i}
                       style={{
@@ -151,6 +158,7 @@ export function AnnualPage() {
                         monthKey={mk}
                         shortLabel={MONTH_LABELS_SHORT[i]}
                         summary={summaries.get(mk) ?? null}
+                        workStats={calendarStats.get(mk) ?? null}
                         isCurrent={mk === today}
                         isLast={i === 11}
                       />
@@ -163,7 +171,7 @@ export function AnnualPage() {
 
         {/* Légende */}
         <p style={{ fontSize: '0.65rem', color: 'var(--ink-4)', marginTop: '0.875rem', textAlign: 'center' }}>
-          Seuls les mois sauvegardés dans Synthèse apparaissent ici.
+          Les finances (Net/Brut) sont basées sur les mois sauvegardés. Les jours/heures viennent du calendrier.
         </p>
 
         {/* Encart motivant — PC uniquement */}
@@ -203,18 +211,20 @@ interface MonthRowProps {
   monthKey: string
   shortLabel: string
   summary: MonthlySummary | null
+  workStats: WorkedDays | null
   isCurrent: boolean
   isLast: boolean
 }
 
-function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRowProps) {
+function MonthRow({ monthKey, shortLabel, summary, workStats, isCurrent, isLast }: MonthRowProps) {
   const full = monthKeyToLabel(monthKey)
   const hasSummary = summary !== null
+  const hasWork = workStats !== null
 
   const cellStyle: React.CSSProperties = {
     padding: '0.7rem 0.875rem',
     fontSize: '0.8rem',
-    color: hasSummary ? 'var(--ink)' : 'var(--ink-4)',
+    color: (hasSummary || hasWork) ? 'var(--ink)' : 'var(--ink-4)',
     borderBottom: isLast ? 'none' : '1px solid var(--border-subtle)',
     background: isCurrent ? 'rgba(214,138,60,0.05)' : 'transparent',
     whiteSpace: 'nowrap',
@@ -266,60 +276,64 @@ function MonthRow({ monthKey, shortLabel, summary, isCurrent, isLast }: MonthRow
       </td>
 
       {/* Matin */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasSummary && (summary.workedDays?.matin ?? 0) > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
-        {hasSummary ? (summary.workedDays?.matin ?? '—') : '—'}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasWork && workStats.matin > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
+        {hasWork && workStats.matin > 0 ? workStats.matin : '—'}
       </td>
 
       {/* AM */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasSummary && (summary.workedDays?.apres_midi ?? 0) > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
-        {hasSummary ? (summary.workedDays?.apres_midi ?? '—') : '—'}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasWork && workStats.apres_midi > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
+        {hasWork && workStats.apres_midi > 0 ? workStats.apres_midi : '—'}
       </td>
 
       {/* Jours supp */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasSummary && (summary.workedDays?.jour_supp ?? 0) > 0 ? '#8aaee0' : 'var(--ink-4)' }}>
-        {hasSummary ? (summary.workedDays?.jour_supp ?? '—') : '—'}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', color: hasWork && workStats.jour_supp > 0 ? '#8aaee0' : 'var(--ink-4)' }}>
+        {hasWork && workStats.jour_supp > 0 ? workStats.jour_supp : '—'}
       </td>
 
       {/* Total jours */}
-      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', fontWeight: 600, color: hasSummary && (summary.workedDays?.total ?? 0) > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
-        {hasSummary ? (summary.workedDays?.total ?? '—') : '—'}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', fontWeight: 600, color: hasWork && workStats.total > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
+        {hasWork && workStats.total > 0 ? workStats.total : '—'}
+      </td>
+
+      {/* Total heures */}
+      <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.75rem', fontWeight: 600, color: hasWork && workStats.totalMinutes > 0 ? 'var(--ink)' : 'var(--ink-4)' }}>
+        {hasWork && workStats.totalMinutes > 0 ? formatMinutes(workStats.totalMinutes, { compact: true }) : '—'}
       </td>
 
       {/* H. supp payées */}
       <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", color: hasSummary && summary.overtimePaidMinutes > 0 ? '#8aaee0' : 'var(--ink-4)', fontSize: '0.75rem' }}>
-        {hasSummary
-          ? summary.overtimePaidMinutes > 0
-            ? formatMinutes(summary.overtimePaidMinutes, { compact: true })
-            : '—'
+        {hasSummary && summary.overtimePaidMinutes > 0
+          ? formatMinutes(summary.overtimePaidMinutes, { compact: true })
           : '—'
         }
       </td>
 
       {/* Compteur crédit */}
       <td style={{ ...cellStyle, textAlign: 'right', fontFamily: "'JetBrains Mono', monospace", color: hasSummary && summary.counterCreditMinutes > 0 ? '#6b8a5a' : 'var(--ink-4)', fontSize: '0.75rem' }}>
-        {hasSummary
-          ? summary.counterCreditMinutes > 0
-            ? `+${formatMinutes(summary.counterCreditMinutes, { compact: true })}`
-            : '—'
+        {hasSummary && summary.counterCreditMinutes > 0
+          ? `+${formatMinutes(summary.counterCreditMinutes, { compact: true })}`
           : '—'
         }
       </td>
 
-      {/* Badge sauvegardé */}
+      {/* Badge sauvegardé / non validé */}
       <td style={{ ...cellStyle, textAlign: 'right', paddingRight: '0.875rem' }}>
-        {hasSummary && (
-          <CheckCircle2 size={14} color="#6b8a5a" style={{ opacity: 0.7 }} />
-        )}
+        {hasSummary ? (
+          <CheckCircle2 size={14} color="#6b8a5a" style={{ opacity: 0.7 }} title="Estimation sauvegardée" />
+        ) : (hasWork && (
+          <AlertCircle size={14} color="var(--ink-4)" style={{ opacity: 0.5 }} title="Non validé (estimation uniquement)" />
+        ))}
       </td>
     </motion.tr>
   )
 }
 
+
 // ─── Ligne squelette ──────────────────────────────────────────────────────────
 function SkeletonRow() {
   return (
     <tr style={{ borderBottom: '1px solid rgba(241,231,210,0.04)' }}>
-      {[80, 64, 56, 28, 28, 28, 32, 40, 40, 16].map((w, i) => (
+      {[80, 64, 56, 28, 28, 28, 32, 40, 40, 40, 16].map((w, i) => (
         <td key={i} style={{ padding: '0.7rem 0.875rem', textAlign: i === 0 ? 'left' : 'right' }}>
           <div className="skeleton" style={{ width: w, height: 12, display: 'inline-block' }} />
         </td>

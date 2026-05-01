@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, X, Timer } from 'lucide-react'
+import { Plus, X, Timer, Calendar, Clock, AlertCircle } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuthStore } from '@/store/authStore'
 import { useCounterBalance } from '@/hooks/useCounterBalance'
+import { useAnnualSummaries } from '@/hooks/useAnnualSummaries'
+import { useYearWorkStats } from '@/hooks/useYearWorkStats'
 import { getCounterMovements, addCounterMovement } from '@/services/firestore/counterMovements'
 import { formatMinutes, formatDateShort, monthKeyToLabel, toMonthKey, parseHHMM, autoFormatHHMM } from '@/utils/formatters'
 import { getMotivationalMessage, resolveCategory } from '@/utils/motivationalMessages'
@@ -46,6 +48,10 @@ export function CounterHistoryPage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
+  const currentYear = new Date().getFullYear()
+  const { summaries: annualSummaries } = useAnnualSummaries(currentYear)
+  const { stats: calendarStats } = useYearWorkStats(currentYear)
+
   const { balanceMinutes, isLoading: balanceLoading } = useCounterBalance()
 
   const movementsQuery = useQuery({
@@ -61,40 +67,119 @@ export function CounterHistoryPage() {
   const motivCategory = resolveCategory({ balanceMinutes, overtimeMinutes: 0, workedCount: 0, totalDays: 1 })
   const motivMsg = getMotivationalMessage(motivCategory, 2)
 
+  const annualStats = useMemo(() => {
+    let days = 0
+    let minutes = 0
+    calendarStats.forEach(s => {
+      days += s.total
+      minutes += s.totalMinutes
+    })
+    return { days, minutes }
+  }, [calendarStats])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <PageHeader title="Compteur" />
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 1rem 6rem' }}>
 
-        {/* Solde total */}
+        {/* Grille de stats (Balance + Annuel) */}
         <div style={{
+          display: 'grid',
+          gridTemplateColumns: isDesktop ? 'repeat(3, 1fr)' : '1fr',
+          gap: '0.75rem',
           margin: '0.75rem 0 1.25rem',
-          padding: '1.25rem',
-          borderRadius: 14,
-          background: 'var(--paper-2)',
-          border: '1px solid var(--rule)',
-          display: 'flex', alignItems: 'center', gap: '1rem',
         }}>
+          {/* Solde total */}
           <div style={{
-            width: 44, height: 44, borderRadius: 12,
-            background: 'rgba(214,138,60,0.10)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
+            padding: '1.25rem',
+            borderRadius: 14,
+            background: 'var(--paper-2)',
+            border: '1px solid var(--rule)',
+            display: 'flex', alignItems: 'center', gap: '1rem',
           }}>
-            <Timer size={22} color="#d68a3c" />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 4 }}>
-              Solde total
-            </div>
             <div style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '2rem', fontWeight: 700,
-              color: balanceLoading ? 'var(--ink-3)' : balanceColor,
-              letterSpacing: '-0.02em', lineHeight: 1,
+              width: 44, height: 44, borderRadius: 12,
+              background: 'rgba(214,138,60,0.10)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
             }}>
-              {balanceLoading ? '…' : formatMinutes(balanceMinutes, { sign: balanceMinutes > 0, compact: true })}
+              <Timer size={22} color="#d68a3c" />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 4 }}>
+                Solde Heures Supp.
+              </div>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '1.75rem', fontWeight: 700,
+                color: balanceLoading ? 'var(--ink-3)' : balanceColor,
+                letterSpacing: '-0.02em', lineHeight: 1,
+              }}>
+                {balanceLoading ? '…' : formatMinutes(balanceMinutes, { sign: balanceMinutes > 0, compact: true })}
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Annuelles (Jours) */}
+          <div style={{
+            padding: '1.25rem',
+            borderRadius: 14,
+            background: 'var(--paper-2)',
+            border: '1px solid var(--rule)',
+            display: 'flex', alignItems: 'center', gap: '1rem',
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: 'rgba(107,138,90,0.10)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Calendar size={22} color="#6b8a5a" />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 4 }}>
+                Travail Annuel (Jours)
+              </div>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '1.75rem', fontWeight: 700,
+                color: 'var(--ink)',
+                letterSpacing: '-0.02em', lineHeight: 1,
+              }}>
+                {annualStats.days}j
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Annuelles (Heures) */}
+          <div style={{
+            padding: '1.25rem',
+            borderRadius: 14,
+            background: 'var(--paper-2)',
+            border: '1px solid var(--rule)',
+            display: 'flex', alignItems: 'center', gap: '1rem',
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: 'rgba(241,201,135,0.10)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Clock size={22} color="#f1c987" />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-3)', marginBottom: 4 }}>
+                Travail Annuel (Heures)
+              </div>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: '1.75rem', fontWeight: 700,
+                color: 'var(--ink)',
+                letterSpacing: '-0.02em', lineHeight: 1,
+              }}>
+                {formatMinutes(annualStats.minutes, { compact: true })}
+              </div>
             </div>
           </div>
         </div>
@@ -142,20 +227,51 @@ export function CounterHistoryPage() {
           </div>
         )}
 
-        {groups.map(({ monthKey, items }) => (
-          <div key={monthKey} style={{ marginBottom: '1.25rem' }}>
-            <div style={{
-              fontSize: '0.68rem', fontWeight: 700,
-              letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: 'var(--ink-3)', marginBottom: '0.5rem', paddingLeft: 2,
-            }}>
-              {monthKeyToLabel(monthKey)}
+        {groups.map(({ monthKey, items }) => {
+          const summary = annualSummaries.get(monthKey)
+          const work = calendarStats.get(monthKey)
+          const isSaved = !!summary
+
+          return (
+            <div key={monthKey} style={{ marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', paddingLeft: 2, paddingRight: 2 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{
+                    fontSize: '0.68rem', fontWeight: 700,
+                    letterSpacing: '0.08em', textTransform: 'uppercase',
+                    color: 'var(--ink-3)',
+                  }}>
+                    {monthKeyToLabel(monthKey)}
+                  </div>
+                  {!isSaved && (work?.total ?? 0) > 0 && (
+                    <AlertCircle size={12} color="var(--ink-4)" style={{ opacity: 0.6 }} title="Mois non validé" />
+                  )}
+                </div>
+                {work && (
+                  <div style={{
+                    fontSize: '0.68rem',
+                    color: isSaved ? 'var(--ink-4)' : 'var(--ink-5)',
+                    fontWeight: 600,
+                    display: 'flex', gap: '0.5rem',
+                    opacity: isSaved ? 1 : 0.7
+                  }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <Calendar size={12} strokeWidth={2.5} />
+                      {work.total}j
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <Clock size={12} strokeWidth={2.5} />
+                      {formatMinutes(work.totalMinutes, { compact: true })}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                {items.map(m => <MovementRow key={m.id} movement={m} />)}
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-              {items.map(m => <MovementRow key={m.id} movement={m} />)}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* FAB ajustement manuel */}

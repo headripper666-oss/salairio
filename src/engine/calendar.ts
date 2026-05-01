@@ -1,4 +1,4 @@
-import type { HolidayOverride } from '@/types/firestore'
+import type { HolidayOverride, CalendarDay, UserSettings, WorkedDays } from '@/types/firestore'
 
 // ─── Algorithme de Butcher-Meeus (Pâques grégorien) ──────────────────────────
 export function computeEasterSunday(year: number): Date {
@@ -90,4 +90,32 @@ export function isPublicHoliday(date: string, overrides: HolidayOverride[]): boo
 // ─── Infos sur le jour Pâques d'une année ────────────────────────────────────
 export function getEasterInfo(year: number): { date: string; label: string } {
   return { date: dateToStr(computeEasterSunday(year)), label: 'Pâques (dimanche)' }
+}
+
+// ─── Calcul des jours et heures travaillés ───────────────────────────────────
+export function computeWorkedDays(days: CalendarDay[], settings: UserSettings): WorkedDays {
+  const counts: WorkedDays = { matin: 0, apres_midi: 0, jour_supp: 0, total: 0, totalMinutes: 0 }
+
+  for (const d of days) {
+    let dayMinutes = 0
+    if (d.status === 'matin') {
+      counts.matin++
+      counts.total++
+      dayMinutes = settings.shifts.find(s => s.key === 'matin')?.durationMinutes ?? 0
+    } else if (d.status === 'apres_midi') {
+      counts.apres_midi++
+      counts.total++
+      dayMinutes = settings.shifts.find(s => s.key === 'apres_midi')?.durationMinutes ?? 0
+    } else if (d.status === 'jour_supp') {
+      counts.jour_supp++
+      counts.total++
+      dayMinutes = (d.extraHoursMinutes ?? 420) - (d.breakMinutes ?? 20)
+    }
+
+    if (dayMinutes > 0) {
+      counts.totalMinutes += dayMinutes + (d.overtimeMinutes ?? 0)
+    }
+  }
+
+  return counts
 }

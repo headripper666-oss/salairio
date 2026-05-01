@@ -33,3 +33,12 @@ export async function getMonthCalendarDays(
   const snap = await getDocs(q)
   return snap.docs.map(d => d.data() as CalendarDay)
 }
+
+export async function getYearCalendarDays(
+  uid: string,
+  year: number,
+): Promise<CalendarDay[]> {
+  const q    = query(col(uid), where('date', '>=', `${year}-01-01`), where('date', '<=', `${year}-12-31`))
+  const snap = await getDocs(q)
+  return snap.docs.map(d => d.data() as CalendarDay)
+}

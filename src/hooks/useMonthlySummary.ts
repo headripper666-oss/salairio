@@ -1,25 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/authStore'
+import { useSettings } from '@/hooks/useSettings'
 import { getMonthlySummary, upsertMonthlySummary } from '@/services/firestore/monthlySummaries'
 import { getMonthCalendarDays } from '@/services/firestore/calendarDays'
 import { useSalaryEngine } from '@/hooks/useSalaryEngine'
-import type { MonthlySummary, WorkedDays } from '@/types/firestore'
-
-async function countWorkedDays(uid: string, monthKey: string): Promise<WorkedDays> {
-  const days = await getMonthCalendarDays(uid, monthKey)
-  const counts = { matin: 0, apres_midi: 0, jour_supp: 0, total: 0 }
-  for (const d of days) {
-    if (d.status === 'matin')      { counts.matin++;      counts.total++ }
-    if (d.status === 'apres_midi') { counts.apres_midi++; counts.total++ }
-    if (d.status === 'jour_supp')  { counts.jour_supp++;  counts.total++ }
-  }
-  return counts
-}
+import { computeWorkedDays } from '@/engine/calendar'
+import type { MonthlySummary } from '@/types/firestore'
 
 export function useMonthlySummary(monthKey: string) {
   const uid = useAuthStore(s => s.user?.uid) ?? null
   const queryClient = useQueryClient()
   const qKey = ['monthlySummary', uid, monthKey]
+  const { settings } = useSettings()
 
   const query = useQuery({
     queryKey: qKey,
@@ -31,8 +23,9 @@ export function useMonthlySummary(monthKey: string) {
 
   const saveMutation = useMutation({
     mutationFn: async (opts?: { realGrossTotal?: number; realNetAfterTax?: number }) => {
-      if (!uid || !result) throw new Error('Données manquantes')
-      const workedDays = await countWorkedDays(uid, monthKey)
+      if (!uid || !result || !settings) throw new Error('Données manquantes')
+      const days = await getMonthCalendarDays(uid, monthKey)
+      const workedDays = computeWorkedDays(days, settings)
       const summary: Omit<MonthlySummary, 'updatedAt'> = {
         monthKey,
         grossBase: result.grossBase,

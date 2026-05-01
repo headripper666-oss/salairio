@@ -117,6 +117,7 @@ export interface WorkedDays {
   apres_midi: number
   jour_supp: number
   total: number
+  totalMinutes: number
 }
 
 export interface MonthlySummary {
