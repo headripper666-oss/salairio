@@ -10,10 +10,6 @@ interface OvertimeInputProps {
 export function OvertimeInput({ value, onChange, valuation }: OvertimeInputProps) {
   const [raw, setRaw] = useState(value > 0 ? minutesToHHMM(value) : '')
 
-  useEffect(() => {
-    setRaw(value > 0 ? minutesToHHMM(value) : '')
-  }, [value])
-
   function handleBlur() {
     if (raw.trim() === '') {
       onChange(0)

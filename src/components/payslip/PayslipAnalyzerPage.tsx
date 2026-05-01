@@ -327,7 +327,7 @@ export function PayslipAnalyzerPage() {
     } finally {
       setAnalyzing(false)
     }
-  }, [file, apiKey, model, systemPrompt])
+  }, [file, apiKey, model, systemPrompt, salaryResult, monthLabel])
 
   const handleSendQuestion = useCallback(async () => {
     const q = question.trim()

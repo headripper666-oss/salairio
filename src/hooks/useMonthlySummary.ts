@@ -54,7 +54,7 @@ export function useMonthlySummary(monthKey: string) {
         counterDebitMinutes: result.counterDebitMinutes,
         counterBalanceEndOfMonth: 0,
         isEstimate: true,
-        computedAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 } as any,
+        computedAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 } as MonthlySummary['updatedAt'],
       }
       await upsertMonthlySummary(uid, monthKey, summary)
     },

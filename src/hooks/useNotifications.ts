@@ -18,7 +18,7 @@ async function getUserGotifyToken(): Promise<string | undefined> {
   if (!uid) return undefined
   try {
     const snap = await getDoc(doc(db, 'users', uid, 'settings', 'main'))
-    return snap.exists() ? (snap.data() as any).gotifyToken : undefined
+    return snap.exists() ? (snap.data() as UserSettings).gotifyToken : undefined
   } catch {
     return undefined
   }
@@ -108,5 +108,8 @@ export async function cancelNotificationsWithPrefix(prefix: string) {
 }
 
 export function getScheduledIds(): string[] {
+  return []
+}
+cheduledIds(): string[] {
   return []
 }

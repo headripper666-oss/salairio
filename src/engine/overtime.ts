@@ -18,7 +18,7 @@ export function computeOvertimeValuation(
   const isPremierMai = date.endsWith('-05-01')
   const isDim = isDimanche(date)
   const basePerMin = settings.hourlyRateGross / 60
-  let rate = 0
+  let rate: number
 
   if (isPremierMai) {
     rate = settings.majorationRules.find(r => r.key === 'premier_mai')?.ratePercent ?? 0

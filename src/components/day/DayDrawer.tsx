@@ -120,28 +120,13 @@ export function DayDrawer({ date, year, month, existingDay, isFerie, onClose }: 
   }
 
   useEffect(() => {
-    setStatus(existingDay?.status ?? 'vide')
-    setOvertime(existingDay?.overtimeMinutes ?? 0)
-    setExtraHours(existingDay?.extraHoursMinutes ?? 420)
-    setBreakMins(existingDay?.breakMinutes ?? 20)
-    setNote(existingDay?.note ?? '')
-    setMealCount((existingDay?.mealCount ?? 0) as 0 | 1 | 2)
-    setShowApptForm(false)
-    setApptTitle('')
-    setApptTime('09:00')
-    setApptNote('')
-    setEditingApptId(null)
-  }, [date, existingDay])
-
-  // Bouton retour Android / gestuelle retour PWA
-  useEffect(() => {
     if (date !== null) {
       history.pushState({ drawerOpen: true }, '')
       const handler = () => onClose()
       window.addEventListener('popstate', handler)
       return () => window.removeEventListener('popstate', handler)
     }
-  }, [date !== null])
+  }, [date, onClose])
 
   const showOvertime = status === 'matin' || status === 'apres_midi'
   const showJourSuppFields = status === 'jour_supp'

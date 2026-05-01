@@ -96,7 +96,7 @@ export function useCalendarDay() {
           note: input.note,
           shiftKey: input.shiftKey,
           mealCount: input.mealCount,
-          updatedAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 } as any,
+          updatedAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 } as CalendarDay['updatedAt'],
         }
         const idx = old.findIndex(d => d.date === date)
         if (idx >= 0) {

@@ -48,7 +48,7 @@ export function useSaveAppointment(_year: number, _month: number) {
 
       const optimistic: Appointment = {
         ...appt,
-        createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 } as any,
+        createdAt: { seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 } as Appointment['createdAt'],
       }
       queryClient.setQueryData<Appointment[]>(qKey, (old = []) => {
         const filtered = old.filter(a => a.id !== appt.id)
