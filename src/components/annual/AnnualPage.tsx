@@ -319,9 +319,9 @@ function MonthRow({ monthKey, shortLabel, summary, workStats, isCurrent, isLast 
       {/* Badge sauvegardé / non validé */}
       <td style={{ ...cellStyle, textAlign: 'right', paddingRight: '0.875rem' }}>
         {hasSummary ? (
-          <CheckCircle2 size={14} color="#6b8a5a" style={{ opacity: 0.7 }} title="Estimation sauvegardée" />
+          <CheckCircle2 size={14} color="#6b8a5a" style={{ opacity: 0.7 }} />
         ) : (hasWork && (
-          <AlertCircle size={14} color="var(--ink-4)" style={{ opacity: 0.5 }} title="Non validé (estimation uniquement)" />
+          <AlertCircle size={14} color="var(--ink-4)" style={{ opacity: 0.5 }} />
         ))}
       </td>
     </motion.tr>

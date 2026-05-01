@@ -244,7 +244,7 @@ export function CounterHistoryPage() {
                     {monthKeyToLabel(monthKey)}
                   </div>
                   {!isSaved && (work?.total ?? 0) > 0 && (
-                    <AlertCircle size={12} color="var(--ink-4)" style={{ opacity: 0.6 }} title="Mois non validé" />
+                    <AlertCircle size={12} color="var(--ink-4)" style={{ opacity: 0.6 }} />
                   )}
                 </div>
                 {work && (
