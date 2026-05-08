@@ -151,10 +151,10 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
 
   const cssEmployee = grossTotal * (settings.cssRatePercent / 100)
   const mutuelleEmployee = settings.mutuelleEmployee
-  const netImposable = grossTotal - cssEmployee - mutuelleEmployee - mealCostTotal
+  const netImposable = grossTotal - cssEmployee - mutuelleEmployee
 
   const pasAmount = netImposable * (pasRate / 100)
-  const netAfterTax = netImposable - pasAmount
+  const netAfterTax = netImposable - pasAmount - mealCostTotal
 
   const counterCreditMinutes = counterMovements
     .filter(m => m.quantityMinutes > 0)

@@ -56,11 +56,11 @@ function formatSalaryForMistral(result: SalaryResult, monthLabel: string): strin
   lines.push('### Déductions')
   lines.push(`- Cotisations salariales : −${fmt(result.cssEmployee)}`)
   lines.push(`- Mutuelle (part salariale) : −${fmt(result.mutuelleEmployee)}`)
-  if (result.mealCostTotal > 0) lines.push(`- Repas (${result.mealCount} repas) : −${fmt(result.mealCostTotal)}`)
   lines.push(`- **Net imposable : ${fmt(result.netImposable)}**`)
   lines.push('')
   lines.push('### Net')
   if (result.pasRate > 0) lines.push(`- PAS (${result.pasRate.toFixed(1)} %) : −${fmt(result.pasAmount)}`)
+  if (result.mealCostTotal > 0) lines.push(`- Repas (${result.mealCount} repas) : −${fmt(result.mealCostTotal)}`)
   lines.push(`- **Net après impôt : ${fmt(result.netAfterTax)}**`)
   return lines.join('\n')
 }
