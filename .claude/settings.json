@@ -1,5 +1,17 @@
 {
   "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "lsof -ti:5173 > /dev/null 2>&1 || (cd /home/renaud/dev/claude-projects/Claude/Salairio && npm run dev >> /tmp/salairio-dev.log 2>&1)",
+            "async": true,
+            "statusMessage": "Démarrage serveur dev Salairio…"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Bash",

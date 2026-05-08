@@ -26,9 +26,27 @@ function formatSalaryForMistral(result: SalaryResult, monthLabel: string): strin
   const lines: string[] = [
     `## Estimation Salairio — ${monthLabel}`,
     '',
-    '### Brut',
-    `- Salaire de base : ${fmt(result.grossBase)}`,
   ]
+
+  if (result.isProrated) {
+    const p = result.grossBasePeriods[0]
+    const fullMonthBase = p ? Math.round(p.rateEurosPerHour * 151.67 * 100) / 100 : null
+    lines.push(`> ⚠️ MOIS PARTIEL : ${p?.days ?? '?'} jours travaillés sur ${p?.totalDaysInMonth ?? '?'} jours calendaires.`)
+    if (fullMonthBase) lines.push(`> Brut plein mois = ${fmt(fullMonthBase)} | Brut proratisé attendu = ${fmt(result.grossBase)} (${p?.days}/${p?.totalDaysInMonth} × ${fmt(fullMonthBase)})`)
+    lines.push(`> Sur la fiche, la ligne "Salaire de base" DOIT afficher environ ${fmt(result.grossBase)}, pas le brut plein mois. Si la fiche montre le brut plein mois, c'est la déduction entrée/sortie qui réduit le net.`)
+    lines.push('')
+  }
+
+  if (result.isProrated) {
+    lines.push('### Heures (Salairio — mois partiel)')
+    lines.push(`- Heures de base travaillées : ${result.workedBaseHours.toFixed(2)} h`)
+    if (result.overtimePaidMinutes > 0) lines.push(`- Heures supp payées : ${(result.overtimePaidMinutes / 60).toFixed(2)} h`)
+    lines.push(`> Sur la fiche, lire la colonne "Unité/Base" de la ligne salaire de base = heures payées. Comparer avec ${result.workedBaseHours.toFixed(2)} h. Si différence > 0,1 h : signaler comme écart dans le tableau.`)
+    lines.push('')
+  }
+  lines.push('### Brut')
+  lines.push(`- Salaire de base : ${fmt(result.grossBase)}`)
+
   if (result.ancienneteEuros > 0) lines.push(`- Prime ancienneté : ${fmt(result.ancienneteEuros)}`)
   if (result.fixedExtrasTotal > 0) lines.push(`- Primes fixes : ${fmt(result.fixedExtrasTotal)}`)
   if (result.oneOffBonusesTotal > 0) lines.push(`- Primes ponctuelles : ${fmt(result.oneOffBonusesTotal)}`)
@@ -48,42 +66,117 @@ function formatSalaryForMistral(result: SalaryResult, monthLabel: string): strin
 }
 
 // ─── Rendu markdown minimaliste ───────────────────────────────────────────────
+type Block =
+  | { type: 'line'; index: number; content: string }
+  | { type: 'table'; rows: string[][]; headerRow: number }
+
+function parseTableLine(line: string): string[] {
+  return line.split('|').map(c => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+}
+
+function isSeparatorRow(cells: string[]): boolean {
+  return cells.every(c => /^[-:]+$/.test(c))
+}
+
+function groupBlocks(lines: string[]): Block[] {
+  const blocks: Block[] = []
+  let i = 0
+  while (i < lines.length) {
+    const line = lines[i]
+    if (line.trim().startsWith('|')) {
+      const tableLines: string[] = []
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        tableLines.push(lines[i])
+        i++
+      }
+      const rows = tableLines.map(parseTableLine)
+      const sepIdx = rows.findIndex(isSeparatorRow)
+      const dataRows = rows.filter((_, idx) => !isSeparatorRow(rows[idx]))
+      blocks.push({ type: 'table', rows: dataRows, headerRow: sepIdx > 0 ? 0 : -1 })
+    } else {
+      blocks.push({ type: 'line', index: i, content: line })
+      i++
+    }
+  }
+  return blocks
+}
+
+function MarkdownTable({ rows, headerRow }: { rows: string[][]; headerRow: number }) {
+  if (rows.length === 0) return null
+  return (
+    <div style={{ overflowX: 'auto', margin: '6px 0' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: '0.78rem' }}>
+        <tbody>
+          {rows.map((cells, ri) => (
+            <tr key={ri} style={{ background: ri % 2 === 0 ? 'var(--paper)' : 'var(--paper-3)' }}>
+              {cells.map((cell, ci) => {
+                const isHeader = ri === headerRow
+                const Tag = isHeader ? 'th' : 'td'
+                return (
+                  <Tag
+                    key={ci}
+                    style={{
+                      padding: '4px 8px',
+                      border: '1px solid var(--rule)',
+                      textAlign: 'left',
+                      fontWeight: isHeader ? 700 : 400,
+                      color: isHeader ? 'var(--ink)' : 'var(--ink-2)',
+                      whiteSpace: ci === 0 ? 'nowrap' : 'normal',
+                    }}
+                  >
+                    {renderInlineMarkdown(cell)}
+                  </Tag>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function MarkdownText({ text }: { text: string }) {
   const lines = text.split('\n')
+  const blocks = groupBlocks(lines)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {lines.map((line, i) => {
+      {blocks.map((block, i) => {
+        if (block.type === 'table') {
+          return <MarkdownTable key={i} rows={block.rows} headerRow={block.headerRow} />
+        }
+        const { content: line, index } = block
         if (line.startsWith('## ')) {
           return (
-            <p key={i} style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--ink)', margin: '10px 0 2px' }}>
+            <p key={index} style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--ink)', margin: '10px 0 2px' }}>
               {line.slice(3)}
             </p>
           )
         }
         if (line.startsWith('# ')) {
           return (
-            <p key={i} style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--amber)', margin: '12px 0 4px' }}>
+            <p key={index} style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--amber)', margin: '12px 0 4px' }}>
               {line.slice(2)}
             </p>
           )
         }
         if (line.startsWith('**') && line.endsWith('**')) {
           return (
-            <p key={i} style={{ fontWeight: 600, color: 'var(--ink)', margin: '6px 0 0' }}>
+            <p key={index} style={{ fontWeight: 600, color: 'var(--ink)', margin: '6px 0 0' }}>
               {line.slice(2, -2)}
             </p>
           )
         }
         if (line.startsWith('- ') || line.startsWith('* ')) {
           return (
-            <p key={i} style={{ margin: '1px 0', paddingLeft: 12, color: 'var(--ink-2)', fontSize: '0.85rem' }}>
+            <p key={index} style={{ margin: '1px 0', paddingLeft: 12, color: 'var(--ink-2)', fontSize: '0.85rem' }}>
               {'· '}{renderInlineMarkdown(line.slice(2))}
             </p>
           )
         }
-        if (line.trim() === '') return <div key={i} style={{ height: 4 }} />
+        if (line.trim() === '') return <div key={index} style={{ height: 4 }} />
         return (
-          <p key={i} style={{ margin: '1px 0', color: 'var(--ink-2)', fontSize: '0.85rem', lineHeight: 1.6 }}>
+          <p key={index} style={{ margin: '1px 0', color: 'var(--ink-2)', fontSize: '0.85rem', lineHeight: 1.6 }}>
             {renderInlineMarkdown(line)}
           </p>
         )
@@ -231,7 +324,7 @@ async function fileToJpegBase64(file: File): Promise<{ base64: string; mimeType:
     const canvas = document.createElement('canvas')
     canvas.width = viewport.width
     canvas.height = viewport.height
-    await page.render({ canvasContext: canvas.getContext('2d')!, canvas, viewport }).promise
+    await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise
     pageCanvases.push(canvas)
   }
 

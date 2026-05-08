@@ -165,13 +165,17 @@ export interface YearlySummary {
 }
 
 // ─── users/{uid}/fixedExtras/{id} ─────────────────────────────────────────────
+export interface FixedExtraPeriod {
+  amount: number
+  appliesFromMonth: string  // "2026-01"
+}
+
 export interface FixedExtra {
   id: string
   label: string
   valueMode: ExtraValueMode
-  amount: number
+  periods: FixedExtraPeriod[]  // trié par appliesFromMonth asc
   isActive: boolean
-  appliesFromMonth?: string  // "2026-01"
   order: number
   createdAt: Timestamp
 }
@@ -191,6 +195,17 @@ export interface TaxRate {
   id: string
   ratePercent: number        // 9.0 (pas 0.09)
   effectiveFrom: string      // "2026-01"
+  note: string
+  createdAt: Timestamp
+}
+
+// ─── users/{uid}/hourlyRatePeriods/{id} ───────────────────────────────────────
+export interface HourlyRatePeriod {
+  id: string
+  label: string            // "Job infirmière A", "Nouveau poste"
+  rateEurosPerHour: number // taux horaire brut (€/h)
+  startDate: string        // "2025-09-01" (YYYY-MM-DD, inclusif)
+  endDate: string | null   // "2025-09-10" (inclusif) ou null = en cours
   note: string
   createdAt: Timestamp
 }

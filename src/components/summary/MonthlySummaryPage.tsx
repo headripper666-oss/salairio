@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { useSwipe } from '@/hooks/useSwipe'
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton'
 import { useSalaryEngine } from '@/hooks/useSalaryEngine'
+import type { FixedExtraDetail } from '@/hooks/useSalaryEngine'
 import { useMonthlySummary } from '@/hooks/useMonthlySummary'
 import { useAnnualSummaries } from '@/hooks/useAnnualSummaries'
 import { useUIStore } from '@/store/uiStore'
@@ -108,7 +109,7 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 
 export function MonthlySummaryPage() {
   const [monthKey, setMonthKey] = useState(monthKeyNow)
-  const { result, isLoading } = useSalaryEngine(monthKey)
+  const { result, isLoading, fixedExtrasDetail } = useSalaryEngine(monthKey)
   const { saveSummary, isSaving, savedSummary } = useMonthlySummary(monthKey)
   const [realGross, setRealGross] = useState('')
   const [realNet,   setRealNet]   = useState('')
@@ -218,13 +219,32 @@ export function MonthlySummaryPage() {
 
               {/* Lignes */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontFamily: "'JetBrains Mono', monospace", fontSize: 13 }}>
-                <ReceiptRow label="Salaire de base" value={fmt(result.grossBase)} />
+                {result.isProrated ? (
+                  <>
+                    {result.grossBasePeriods.map((p, i) => (
+                      <ReceiptRow
+                        key={i}
+                        label={`${p.label} (${result.workedBaseHours.toFixed(2)}h/151.67h)`}
+                        value={fmt(p.amount)}
+                        color="#8e8775"
+                      />
+                    ))}
+                    <ReceiptRow label="Salaire de base (proraté)" value={fmt(result.grossBase)} bold sep />
+                  </>
+                ) : (
+                  <ReceiptRow label="Salaire de base" value={fmt(result.grossBase)} />
+                )}
+                <ReceiptRow
+                  label="Heures de base"
+                  value={`${result.workedBaseHours.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} h`}
+                  color="#aaa090"
+                />
                 {result.ancienneteEuros > 0 && (
                   <ReceiptRow label="Ancienneté" value={`+ ${fmt(result.ancienneteEuros)}`} color="#8aaee0" />
                 )}
-                {result.fixedExtrasTotal > 0 && (
-                  <ReceiptRow label="Primes fixes" value={`+ ${fmt(result.fixedExtrasTotal)}`} color="#6b8a5a" />
-                )}
+                {fixedExtrasDetail.map((e: FixedExtraDetail) => (
+                  <ReceiptRow key={e.label} label={e.label} value={`+ ${fmt(e.amount)}`} color="#6b8a5a" />
+                ))}
                 {result.oneOffBonusesTotal > 0 && (
                   <ReceiptRow label="Primes ponctuelles" value={`+ ${fmt(result.oneOffBonusesTotal)}`} color="#6b8a5a" />
                 )}

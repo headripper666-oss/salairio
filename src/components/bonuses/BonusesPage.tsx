@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, ToggleLeft, ToggleRight, Gift, Repeat } from 'lucide-react'
+import { Plus, Trash2, ToggleLeft, ToggleRight, Gift, Repeat, ChevronDown, ChevronUp, Pencil } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -7,7 +7,7 @@ import { useFixedExtras } from '@/hooks/useFixedExtras'
 import { useOneOffBonuses } from '@/hooks/useOneOffBonuses'
 import { getMotivationalMessage } from '@/utils/motivationalMessages'
 import { useUIStore } from '@/store/uiStore'
-import type { ExtraValueMode } from '@/types/firestore'
+import type { ExtraValueMode, FixedExtra, FixedExtraPeriod } from '@/types/firestore'
 
 const S = {
   card:      { background: 'var(--paper-2)', border: '1px solid var(--rule)', borderRadius: 14 } as React.CSSProperties,
@@ -21,6 +21,16 @@ const S = {
 function monthKeyNow(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function fmtAmount(e: { valueMode: ExtraValueMode }, amount: number) {
+  if (e.valueMode === 'fixed_euros') return `${amount.toFixed(2)} €`
+  return `${amount} % du brut`
+}
+
+function fmtMonth(monthKey: string) {
+  try { return format(parseISO(`${monthKey}-01`), 'MMM yyyy', { locale: fr }) }
+  catch { return monthKey }
 }
 
 // ─── Dialog ajout prime fixe ─────────────────────────────────────────────────
@@ -45,11 +55,10 @@ function AddFixedDialog({ onClose, onAdd }: AddFixedDialogProps) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '1rem', paddingBottom: 'calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 1rem)' }}>
       <div style={S.dialog}>
         <h3 style={{ fontWeight: 700, color: 'var(--ink)', margin: 0, fontSize: '1rem' }}>Nouvelle prime fixe</h3>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div>
             <label style={S.label}>Libellé</label>
-            <input style={S.input} placeholder="Prime d'ancienneté" value={label} onChange={e => setLabel(e.target.value)} />
+            <input style={S.input} placeholder="Segur I" value={label} onChange={e => setLabel(e.target.value)} />
           </div>
           <div>
             <label style={S.label}>Type</label>
@@ -60,17 +69,57 @@ function AddFixedDialog({ onClose, onAdd }: AddFixedDialogProps) {
           </div>
           <div>
             <label style={S.label}>{mode === 'fixed_euros' ? 'Montant (€)' : 'Pourcentage'}</label>
-            <input type="number" min="0" step="0.01" style={S.input} placeholder={mode === 'fixed_euros' ? '150.00' : '5'} value={amount} onChange={e => setAmount(e.target.value)} />
+            <input type="number" min="0" step="0.01" style={S.input} placeholder={mode === 'fixed_euros' ? '206.00' : '5'} value={amount} onChange={e => setAmount(e.target.value)} />
           </div>
           <div>
             <label style={S.label}>Applicable à partir de</label>
             <input type="month" style={S.input} value={fromMonth} onChange={e => setFromMonth(e.target.value)} />
           </div>
         </div>
-
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button onClick={onClose} style={S.btnCancel}>Annuler</button>
           <button onClick={submit} style={S.btnAdd}>Ajouter</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Dialog modification montant (nouvelle période) ───────────────────────────
+interface AddPeriodDialogProps {
+  extra: FixedExtra
+  onClose: () => void
+  onAdd: (period: FixedExtraPeriod) => void
+}
+
+function AddPeriodDialog({ extra, onClose, onAdd }: AddPeriodDialogProps) {
+  const [amount, setAmount] = useState('')
+  const [fromMonth, setFromMonth] = useState(monthKeyNow())
+
+  function submit() {
+    if (!amount) return
+    onAdd({ amount: parseFloat(amount), appliesFromMonth: fromMonth })
+    onClose()
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '1rem', paddingBottom: 'calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 1rem)' }}>
+      <div style={S.dialog}>
+        <h3 style={{ fontWeight: 700, color: 'var(--ink)', margin: 0, fontSize: '1rem' }}>Modifier le montant</h3>
+        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--ink-3)' }}>{extra.label} — les mois précédents ne seront pas affectés.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div>
+            <label style={S.label}>Nouveau montant {extra.valueMode === 'fixed_euros' ? '(€)' : '(%)'}</label>
+            <input type="number" min="0" step="0.01" style={S.input} placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} autoFocus />
+          </div>
+          <div>
+            <label style={S.label}>À partir de</label>
+            <input type="month" style={S.input} value={fromMonth} onChange={e => setFromMonth(e.target.value)} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={onClose} style={S.btnCancel}>Annuler</button>
+          <button onClick={submit} style={S.btnAdd}>Enregistrer</button>
         </div>
       </div>
     </div>
@@ -99,7 +148,6 @@ function AddOneOffDialog({ onClose, onAdd }: AddOneOffDialogProps) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '1rem', paddingBottom: 'calc(var(--nav-height-mobile) + env(safe-area-inset-bottom, 0px) + 1rem)' }}>
       <div style={S.dialog}>
         <h3 style={{ fontWeight: 700, color: 'var(--ink)', margin: 0, fontSize: '1rem' }}>Nouvelle prime ponctuelle</h3>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div>
             <label style={S.label}>Libellé</label>
@@ -118,13 +166,108 @@ function AddOneOffDialog({ onClose, onAdd }: AddOneOffDialogProps) {
             <input style={S.input} placeholder="Détails…" value={note} onChange={e => setNote(e.target.value)} />
           </div>
         </div>
-
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button onClick={onClose} style={S.btnCancel}>Annuler</button>
           <button onClick={submit} style={S.btnAdd}>Ajouter</button>
         </div>
       </div>
     </div>
+  )
+}
+
+// ─── Carte prime fixe avec historique périodes ────────────────────────────────
+interface FixedExtraCardProps {
+  extra: FixedExtra
+  onToggle: () => void
+  onDelete: () => void
+  onAddPeriod: (period: FixedExtraPeriod) => void
+  onDeletePeriod: (appliesFromMonth: string) => void
+}
+
+function FixedExtraCard({ extra, onToggle, onDelete, onAddPeriod, onDeletePeriod }: FixedExtraCardProps) {
+  const [expanded, setExpanded] = useState(false)
+  const [showPeriodDialog, setShowPeriodDialog] = useState(false)
+
+  const sortedPeriods = [...extra.periods].sort((a, b) => b.appliesFromMonth.localeCompare(a.appliesFromMonth))
+  const currentPeriod = sortedPeriods[0]
+
+  return (
+    <>
+      <div style={{ ...S.card, overflow: 'hidden' }}>
+        {/* Ligne principale */}
+        <div style={{ display: 'flex', alignItems: 'center', padding: '0.875rem 1rem', gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--ink)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {extra.label}
+            </p>
+            <p style={{ fontSize: '0.72rem', color: 'var(--ink-3)', margin: 0 }}>
+              {currentPeriod ? fmtAmount(extra, currentPeriod.amount) : '—'}
+              {currentPeriod && ` · depuis ${fmtMonth(currentPeriod.appliesFromMonth)}`}
+            </p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <button
+              onClick={() => setShowPeriodDialog(true)}
+              title="Modifier le montant"
+              style={{ background: 'none', border: '1px solid var(--rule)', borderRadius: 6, cursor: 'pointer', color: 'var(--ink-3)', display: 'flex', padding: '4px 6px', alignItems: 'center', gap: 3, fontSize: '0.72rem' }}
+            >
+              <Pencil size={11} /> Modifier
+            </button>
+            <button
+              onClick={onToggle}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: extra.isActive ? '#d68a3c' : '#5a5448', display: 'flex', padding: 2 }}
+              title={extra.isActive ? 'Désactiver' : 'Activer'}
+            >
+              {extra.isActive ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
+            </button>
+            <button onClick={onDelete} className="delete-btn">
+              <Trash2 size={14} />
+            </button>
+            {extra.periods.length > 1 && (
+              <button
+                onClick={() => setExpanded(v => !v)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-3)', display: 'flex', padding: 2 }}
+                title={expanded ? 'Masquer l\'historique' : 'Voir l\'historique'}
+              >
+                {expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Historique des périodes */}
+        {expanded && extra.periods.length > 1 && (
+          <div style={{ borderTop: '1px solid var(--rule)', padding: '0.5rem 1rem 0.75rem' }}>
+            <p style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--ink-4)', margin: '0 0 6px' }}>Historique</p>
+            {sortedPeriods.map((p, i) => (
+              <div key={p.appliesFromMonth} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 0' }}>
+                <span style={{ fontSize: '0.78rem', color: i === 0 ? 'var(--ink)' : 'var(--ink-3)' }}>
+                  {fmtMonth(p.appliesFromMonth)} — {fmtAmount(extra, p.amount)}
+                  {i === 0 && <span style={{ fontSize: '0.65rem', color: 'var(--amber)', marginLeft: 6 }}>actuel</span>}
+                </span>
+                {i > 0 && (
+                  <button
+                    onClick={() => onDeletePeriod(p.appliesFromMonth)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ink-4)', display: 'flex', padding: 2 }}
+                    title="Supprimer cette période"
+                  >
+                    <Trash2 size={11} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showPeriodDialog && (
+        <AddPeriodDialog
+          extra={extra}
+          onClose={() => setShowPeriodDialog(false)}
+          onAdd={onAddPeriod}
+        />
+      )}
+    </>
   )
 }
 
@@ -142,14 +285,9 @@ export function BonusesPage() {
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  const { fixedExtras, addExtra, updateExtra, deleteExtra } = useFixedExtras()
+  const { fixedExtras, addExtra, updateExtra, addPeriod, deletePeriod, deleteExtra } = useFixedExtras()
   const { bonuses, addBonus, deleteBonus } = useOneOffBonuses()
   const motivMsg = getMotivationalMessage('general', 4)
-
-  function fmtExtra(e: { valueMode: ExtraValueMode; amount: number }) {
-    if (e.valueMode === 'fixed_euros') return `${e.amount.toFixed(2)} €`
-    return `${e.amount} % du brut`
-  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -177,29 +315,14 @@ export function BonusesPage() {
           )}
 
           {fixedExtras.map(e => (
-            <div key={e.id} style={{ ...S.card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.875rem 1rem' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '0.9rem', color: 'var(--ink)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.label}</p>
-                <p style={{ fontSize: '0.72rem', color: 'var(--ink-3)', margin: 0 }}>
-                  {fmtExtra(e)}{e.appliesFromMonth && ` · depuis ${e.appliesFromMonth}`}
-                </p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 12 }}>
-                <button
-                  onClick={() => updateExtra(e.id, { isActive: !e.isActive })}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: e.isActive ? '#d68a3c' : '#5a5448', display: 'flex', padding: 2 }}
-                  title={e.isActive ? 'Désactiver' : 'Activer'}
-                >
-                  {e.isActive ? <ToggleRight size={22} /> : <ToggleLeft size={22} />}
-                </button>
-                <button
-                  onClick={() => deleteExtra(e.id)}
-                  className="delete-btn"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
+            <FixedExtraCard
+              key={e.id}
+              extra={e}
+              onToggle={() => updateExtra(e.id, { isActive: !e.isActive })}
+              onDelete={() => deleteExtra(e.id)}
+              onAddPeriod={period => addPeriod(e.id, period, e.periods)}
+              onDeletePeriod={month => deletePeriod(e.id, month, e.periods)}
+            />
           ))}
         </section>
 
@@ -231,11 +354,7 @@ export function BonusesPage() {
                   {b.note && ` · ${b.note}`}
                 </p>
               </div>
-              <button
-                onClick={() => deleteBonus(b.id)}
-                className="delete-btn"
-                style={{ marginLeft: 12 }}
-              >
+              <button onClick={() => deleteBonus(b.id)} className="delete-btn" style={{ marginLeft: 12 }}>
                 <Trash2 size={14} />
               </button>
             </div>
@@ -273,7 +392,13 @@ export function BonusesPage() {
       {showFixedDialog && (
         <AddFixedDialog
           onClose={() => setShowFixedDialog(false)}
-          onAdd={data => addExtra({ ...data, isActive: true, order: fixedExtras.length })}
+          onAdd={data => addExtra({
+            label: data.label,
+            valueMode: data.valueMode,
+            periods: [{ amount: data.amount, appliesFromMonth: data.appliesFromMonth }],
+            isActive: true,
+            order: fixedExtras.length,
+          })}
         />
       )}
       {showOneOffDialog && (

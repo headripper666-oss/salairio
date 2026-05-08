@@ -2,13 +2,14 @@ import { useState, useCallback, useRef, useMemo } from 'react'
 import {
   DollarSign, Clock, Zap, TrendingUp, CalendarDays, Bell,
   ChevronDown, ChevronLeft, ChevronRight, Plus, Trash2, Check, AlertTriangle,
-  Smartphone, ExternalLink, Sparkles, Eye, EyeOff,
+  Smartphone, ExternalLink, Sparkles, Eye, EyeOff, RotateCcw, FileText,
 } from 'lucide-react'
 import { requestNotificationPermission, scheduleNotification, isNotificationGranted, getScheduledIds } from '@/hooks/useNotifications'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { useSettings } from '@/hooks/useSettings'
 import { useTaxRates } from '@/hooks/useTaxRates'
+import { useHourlyRatePeriods } from '@/hooks/useHourlyRatePeriods'
 import { useHolidayOverrides } from '@/hooks/useHolidayOverrides'
 import { getPublicHolidays } from '@/engine/calendar'
 import { BASE_MONTHLY_HOURS } from '@/engine/constants'
@@ -17,6 +18,7 @@ import { cleanMonth, cleanYear, resetAccount } from '@/services/firestore/cleanu
 import { useAuthStore } from '@/store/authStore'
 import { useQueryClient } from '@tanstack/react-query'
 import type { UserSettings, MajorationRule, ShiftDefinition } from '@/types/firestore'
+import { DEFAULT_SYSTEM_PROMPT } from '@/services/mistral'
 
 // ─── Hook save indicator ───────────────────────────────────────────────────────
 function useSaveIndicator() {
@@ -680,7 +682,138 @@ function TaxRateSection() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// SECTION 5 — Jours fériés
+// SECTION 5 — Taux horaire par période (multi-job / mois partiel)
+// ═══════════════════════════════════════════════════════════
+function HourlyRatePeriodsSection() {
+  const { periods, addPeriod, deletePeriod, isAdding } = useHourlyRatePeriods()
+
+  const [newLabel, setNewLabel] = useState('')
+  const [newRate,  setNewRate]  = useState('')
+  const [newStart, setNewStart] = useState('')
+  const [newEnd,   setNewEnd]   = useState('')
+
+  const handleAdd = () => {
+    const rate = parseFloat(newRate)
+    if (!newLabel.trim() || isNaN(rate) || rate <= 0 || !newStart) return
+    if (newEnd && newEnd < newStart) return
+    addPeriod({
+      label: newLabel.trim(),
+      rateEurosPerHour: rate,
+      startDate: newStart,
+      endDate: newEnd || null,
+      note: '',
+    })
+    setNewLabel('')
+    setNewRate('')
+    setNewStart('')
+    setNewEnd('')
+  }
+
+  const canAdd = newLabel.trim() && parseFloat(newRate) > 0 && newStart && (!newEnd || newEnd >= newStart)
+
+  return (
+    <AccordionSection
+      icon={<DollarSign size={16} />}
+      title="Taux horaire — historique des postes"
+    >
+      <p style={{ fontSize: '0.78rem', color: '#8e8775', margin: 0 }}>
+        Déclare une période par poste. En cas de changement de job en cours de mois, Salairio calcule le salaire de base au prorata des jours calendaires. Un gap (période sans contrat) est traité automatiquement comme jours non rémunérés.
+      </p>
+
+      {periods.length === 0 ? (
+        <p style={{ fontSize: '0.82rem', color: '#8e8775', fontStyle: 'italic' }}>
+          Aucune période — le taux horaire défini dans Paramètres de paie s'applique à tous les mois.
+        </p>
+      ) : (
+        <div className="tax-rate-list">
+          {[...periods].reverse().map(p => (
+            <div key={p.id} className="tax-rate-item">
+              <span className="tax-rate-value">{p.rateEurosPerHour.toFixed(2)} €/h</span>
+              <span className="tax-rate-from">
+                {formatDateShort(p.startDate)} → {p.endDate ? formatDateShort(p.endDate) : 'en cours'}
+              </span>
+              {p.label && <span className="tax-rate-note">{p.label}</span>}
+              <button
+                type="button"
+                className="delete-btn"
+                onClick={() => deletePeriod(p.id)}
+                aria-label="Supprimer cette période"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Formulaire ajout */}
+      <div className="add-form">
+        <p className="settings-section-title" style={{ padding: 0, marginBottom: 4 }}>
+          Ajouter une période
+        </p>
+        <div className="add-form-row" style={{ flexWrap: 'wrap' }}>
+          <div className="settings-field" style={{ flex: 1, minWidth: 140 }}>
+            <label className="settings-label">Poste / label</label>
+            <input
+              type="text"
+              value={newLabel}
+              onChange={e => setNewLabel(e.target.value)}
+              className="settings-input"
+              placeholder="Infirmière bloc op."
+            />
+          </div>
+          <div className="settings-field" style={{ width: 110 }}>
+            <label className="settings-label">Taux (€/h)</label>
+            <div className="settings-input-wrap">
+              <input
+                type="number"
+                value={newRate}
+                onChange={e => setNewRate(e.target.value)}
+                className="settings-input settings-input--has-suffix"
+                placeholder="15,34"
+                min="0"
+                step="0.01"
+              />
+              <span className="settings-suffix">€</span>
+            </div>
+          </div>
+          <div className="settings-field" style={{ width: 150 }}>
+            <label className="settings-label">Date début</label>
+            <input
+              type="date"
+              value={newStart}
+              onChange={e => setNewStart(e.target.value)}
+              className="settings-input"
+            />
+          </div>
+          <div className="settings-field" style={{ width: 150 }}>
+            <label className="settings-label">Date fin (vide = en cours)</label>
+            <input
+              type="date"
+              value={newEnd}
+              onChange={e => setNewEnd(e.target.value)}
+              className="settings-input"
+              min={newStart || undefined}
+            />
+          </div>
+        </div>
+        <button
+          type="button"
+          className="add-btn"
+          onClick={handleAdd}
+          disabled={isAdding || !canAdd}
+          style={{ alignSelf: 'flex-start' }}
+        >
+          <Plus size={14} />
+          {isAdding ? 'Enregistrement…' : 'Ajouter cette période'}
+        </button>
+      </div>
+    </AccordionSection>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════
+// SECTION 6 — Jours fériés
 // ═══════════════════════════════════════════════════════════
 function HolidaySection() {
   const [year, setYear] = useState(new Date().getFullYear())
@@ -1171,6 +1304,18 @@ function MistralSection() {
   const [model, setModel] = useState(() => settings?.mistralModel ?? 'mistral-small-latest')
   const [prompt, setPrompt] = useState(() => settings?.mistralSystemPrompt ?? '')
   const [showKey, setShowKey] = useState(false)
+  const [showDefaultPrompt, setShowDefaultPrompt] = useState(false)
+
+  const isUsingDefault = !prompt.trim()
+
+  const loadDefaultIntoEditor = () => {
+    setPrompt(DEFAULT_SYSTEM_PROMPT)
+  }
+
+  const resetToDefault = () => {
+    setPrompt('')
+    updateSettings({ mistralSystemPrompt: '' }, { onSuccess: show })
+  }
 
   return (
     <AccordionSection icon={<Sparkles size={16} />} title="Analyse IA (Mistral)" saved={visible}>
@@ -1240,40 +1385,119 @@ function MistralSection() {
       <div className="settings-divider" />
       <div className="settings-section-title">Prompt système</div>
 
+      {/* Badge état prompt */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{
+          fontSize: '0.68rem', fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+          background: isUsingDefault ? 'rgba(107,138,90,0.12)' : 'rgba(214,138,60,0.1)',
+          color: isUsingDefault ? 'var(--moss)' : 'var(--amber)',
+          border: `1px solid ${isUsingDefault ? 'rgba(107,138,90,0.25)' : 'rgba(214,138,60,0.25)'}`,
+        }}>
+          {isUsingDefault ? 'Prompt par défaut actif' : 'Prompt personnalisé actif'}
+        </span>
+      </div>
+
       {/* Prompt système */}
       <div className="settings-field settings-field--full">
-        <label className="settings-label">Instructions par défaut</label>
+        <label className="settings-label">Instructions envoyées à l'IA</label>
         <span className="settings-hint">
-          Laisser vide pour utiliser le prompt par défaut intégré à l'app.
-          Modifier uniquement pour ajuster le comportement du modèle.
+          {isUsingDefault
+            ? 'Le prompt par défaut est utilisé. Tu peux le charger ici pour le modifier.'
+            : 'Prompt personnalisé actif. Vider le champ pour revenir au prompt par défaut.'}
         </span>
         <textarea
-          value={prompt}
+          value={isUsingDefault ? '' : prompt}
           onChange={e => setPrompt(e.target.value)}
           onBlur={() => updateSettings({ mistralSystemPrompt: prompt.trim() }, { onSuccess: show })}
           className="settings-input"
-          placeholder="Laisser vide = prompt par défaut"
-          rows={6}
+          placeholder={isUsingDefault ? '(prompt par défaut — clique sur « Charger le prompt par défaut » pour le modifier)' : ''}
+          rows={isUsingDefault ? 3 : 10}
           style={{ resize: 'vertical', fontFamily: "'DM Mono', monospace", fontSize: '0.72rem', lineHeight: 1.55 }}
         />
       </div>
-      {prompt && (
+
+      {/* Actions */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+        {/* Voir le prompt par défaut */}
         <button
           type="button"
-          onClick={() => {
-            setPrompt('')
-            updateSettings({ mistralSystemPrompt: '' }, { onSuccess: show })
-          }}
+          onClick={() => setShowDefaultPrompt(v => !v)}
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
-            padding: '0.3rem 0.65rem', borderRadius: 6, marginTop: 4,
-            border: '1px dashed var(--rule)',
+            padding: '0.3rem 0.65rem', borderRadius: 6,
+            border: '1px solid var(--rule)',
             background: 'transparent', color: 'var(--ink-3)', fontSize: '0.72rem', cursor: 'pointer',
           }}
         >
-          Revenir au prompt par défaut
+          <FileText size={12} />
+          {showDefaultPrompt ? 'Masquer le prompt par défaut' : 'Voir le prompt par défaut'}
         </button>
-      )}
+
+        {/* Charger dans l'éditeur */}
+        {isUsingDefault && (
+          <button
+            type="button"
+            onClick={loadDefaultIntoEditor}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '0.3rem 0.65rem', borderRadius: 6,
+              border: '1px dashed var(--amber)',
+              background: 'rgba(214,138,60,0.06)', color: 'var(--amber)', fontSize: '0.72rem', cursor: 'pointer',
+            }}
+          >
+            <FileText size={12} />
+            Charger le prompt par défaut (pour le modifier)
+          </button>
+        )}
+
+        {/* Revenir au défaut */}
+        {!isUsingDefault && (
+          <button
+            type="button"
+            onClick={resetToDefault}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '0.3rem 0.65rem', borderRadius: 6,
+              border: '1px dashed rgba(200,112,103,0.5)',
+              background: 'transparent', color: 'var(--rose)', fontSize: '0.72rem', cursor: 'pointer',
+            }}
+          >
+            <RotateCcw size={12} />
+            Revenir au prompt par défaut
+          </button>
+        )}
+      </div>
+
+      {/* Affichage du prompt par défaut en lecture seule */}
+      <AnimatePresence>
+        {showDefaultPrompt && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ overflow: 'hidden', marginTop: 10 }}
+          >
+            <div style={{
+              background: 'rgba(241,231,210,0.04)',
+              border: '1px solid var(--rule)',
+              borderRadius: 8,
+              padding: '0.75rem',
+            }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--ink-3)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Prompt par défaut (lecture seule)
+              </div>
+              <pre style={{
+                margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                fontFamily: "'DM Mono', monospace", fontSize: '0.68rem', lineHeight: 1.6,
+                color: 'var(--ink-2)', maxHeight: 360, overflowY: 'auto',
+              }}>
+                {DEFAULT_SYSTEM_PROMPT}
+              </pre>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AccordionSection>
   )
 }
@@ -1525,7 +1749,7 @@ export function SettingsPage() {
             background: 'rgba(240,160,32,0.08)', border: '1px solid rgba(240,160,32,0.18)',
             borderRadius: 4, padding: '2px 8px',
           }}>
-            V1.3B
+            V1.3C
           </span>
         }
       />
@@ -1542,6 +1766,7 @@ export function SettingsPage() {
         <ShiftsSection />
         <MajorationsSection />
         <TaxRateSection />
+        <HourlyRatePeriodsSection />
         <HolidaySection />
         <RemindersSection />
         <GotifySection />
