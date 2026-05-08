@@ -66,9 +66,25 @@ export function useSalaryEngine(monthKey: string): { result: SalaryResult | null
     staleTime: 2 * 60 * 1000,
   })
 
+  // Les repas pris en mois M sont prélevés sur le salaire de M+1
+  const prevMonthKey = (() => {
+    const [y, m] = monthKey.split('-').map(Number)
+    return m === 1
+      ? `${y - 1}-12`
+      : `${y}-${String(m - 1).padStart(2, '0')}`
+  })()
+
+  const prevMonthDaysQuery = useQuery({
+    queryKey: ['calendarMonth', uid, prevMonthKey],
+    queryFn: () => getMonthCalendarDays(uid!, prevMonthKey),
+    enabled: !!uid,
+    staleTime: 2 * 60 * 1000,
+  })
+
   const isLoading =
     settingsLoading || extrasLoading || bonusesLoading || ratesLoading ||
-    movementsQuery.isLoading || calendarDaysQuery.isLoading || periodsLoading
+    movementsQuery.isLoading || calendarDaysQuery.isLoading || periodsLoading ||
+    prevMonthDaysQuery.isLoading
 
   if (isLoading || !settings) return { result: null, isLoading, fixedExtrasDetail: [] }
 
@@ -76,7 +92,7 @@ export function useSalaryEngine(monthKey: string): { result: SalaryResult | null
   const pasRate = getActivePasRate(taxRates, monthKey)
 
   const mealPrice = settings.mealPriceEuros ?? 0
-  const mealCount = (calendarDaysQuery.data ?? []).reduce((acc, d) => acc + (d.mealCount ?? 0), 0)
+  const mealCount = (prevMonthDaysQuery.data ?? []).reduce((acc, d) => acc + (d.mealCount ?? 0), 0)
   const mealCostTotal = mealCount * mealPrice
 
   const result = computeMonthlySalary({

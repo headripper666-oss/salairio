@@ -259,6 +259,9 @@ export function MonthlySummaryPage() {
                 )}
                 <ReceiptRow label="Net imposable" value={fmt(result.netImposable)} sep />
                 <ReceiptRow label={`PAS (${result.pasRate} %)`} value={`− ${fmt(result.pasAmount)}`} color="#c87067" />
+                {result.mealCostTotal > 0 && (
+                  <ReceiptRow label={`Repas (${result.mealCount} repas)`} value={`− ${fmt(result.mealCostTotal)}`} color="#c87067" />
+                )}
               </div>
 
               {/* Ligne ondulée */}
@@ -271,7 +274,9 @@ export function MonthlySummaryPage() {
 
               {/* Net final */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <span style={{ fontWeight: 600, fontSize: 16, color: '#5a3a14' }}>Net après PAS</span>
+                <span style={{ fontWeight: 600, fontSize: 16, color: '#5a3a14' }}>
+                  {result.mealCostTotal > 0 ? 'Net après PAS et repas' : 'Net après PAS'}
+                </span>
                 <span style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 32, color: '#5a3a14', lineHeight: 1 }}>
                   {fmt(result.netAfterTax)}
                 </span>

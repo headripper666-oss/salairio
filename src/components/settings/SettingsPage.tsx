@@ -156,6 +156,7 @@ function PaySection() {
 
   const [hourly,    setHourly]    = useState(() => String(settings?.hourlyRateGross ?? ''))
   const [css,       setCss]       = useState(() => String(settings?.cssRatePercent  ?? 22))
+  const [csgNonDed, setCsgNonDed] = useState(() => String(settings?.csgNonDeductiblePct ?? 2.90))
   const [mut,       setMut]       = useState(() => String(settings?.mutuelleEmployee ?? ''))
   const [mealPrice, setMealPrice] = useState(() => String(settings?.mealPriceEuros ?? ''))
 
@@ -226,6 +227,17 @@ function PaySection() {
           step="0.1"
           min="0"
           placeholder="22"
+        />
+        <Field
+          label="CSG non déductible"
+          hint="Part non déductible de la CSG/CRDS — base du calcul PAS (2,90% par défaut)"
+          value={csgNonDed}
+          onChange={setCsgNonDed}
+          onBlur={() => saveField('csgNonDeductiblePct', csgNonDed)}
+          suffix="%"
+          step="0.01"
+          min="0"
+          placeholder="2.90"
         />
         <Field
           label="Mutuelle (part salariale)"

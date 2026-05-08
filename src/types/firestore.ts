@@ -66,6 +66,7 @@ export interface UserSettings {
   cssRatePercent: number           // taux cotisations salariales (~22)
   mutuelleEmployee: number         // part salariale mutuelle (€/mois)
   mealPriceEuros?: number          // prix d'un repas retenu sur salaire (€)
+  csgNonDeductiblePct?: number     // part non déductible de la CSG/CRDS (défaut 2,90%)
   shifts: ShiftDefinition[]        // [matin, apres_midi, ...]
   majorationRules: MajorationRule[]
   majorationMode: MajorationMode

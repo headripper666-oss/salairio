@@ -40,6 +40,8 @@ export interface SalaryResult {
   mealCostTotal: number
   mealCount: number
   netImposable: number
+  csgNonDeductible: number
+  netFiscal: number
   pasRate: number
   pasAmount: number
   netAfterTax: number
@@ -153,7 +155,12 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
   const mutuelleEmployee = settings.mutuelleEmployee
   const netImposable = grossTotal - cssEmployee - mutuelleEmployee
 
-  const pasAmount = netImposable * (pasRate / 100)
+  // La CSG non déductible est réintégrée dans la base fiscale (non déductible du revenu imposable)
+  const csgNonDeductiblePct = settings.csgNonDeductiblePct ?? 2.90
+  const csgNonDeductible = grossTotal * (csgNonDeductiblePct / 100)
+  const netFiscal = netImposable + csgNonDeductible
+
+  const pasAmount = netFiscal * (pasRate / 100)
   const netAfterTax = netImposable - pasAmount - mealCostTotal
 
   const counterCreditMinutes = counterMovements
@@ -181,6 +188,8 @@ export function computeMonthlySalary(input: SalaryInput): SalaryResult {
     mealCostTotal,
     mealCount,
     netImposable,
+    csgNonDeductible,
+    netFiscal,
     pasRate,
     pasAmount,
     netAfterTax,
